@@ -40,6 +40,12 @@ yarn-error.log*
 # repomix / context dumps — regenerated artifacts that duplicate the whole repo
 repomix-output.*
 
+# Claude Code — machine-local state. `.claude/launch.json` describes how to
+# start the dev server on one particular machine, so it is noise in history.
+# Anything genuinely shared (agents, project instructions) should be added back
+# with a negation rather than by removing this rule.
+.claude/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
