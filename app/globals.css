@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-card: rgba(255, 255, 255, 0.03);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+}
+
+body {
+  background: var(--bg-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: white;
+}
+
+/* Ambient glow orbs */
+.ambient-glow {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-glow-1 {
+  top: -10%;
+  left: -5%;
+  width: 600px;
+  height: 600px;
+  background: #7c3aed;
+}
+
+.ambient-glow-2 {
+  top: 40%;
+  right: -10%;
+  width: 500px;
+  height: 500px;
+  background: #ec4899;
+}
+
+.ambient-glow-3 {
+  bottom: -10%;
+  left: 30%;
+  width: 400px;
+  height: 400px;
+  background: #3b82f6;
+}

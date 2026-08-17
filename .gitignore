@@ -1,0 +1,48 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/install-state.gz
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files
+# Deny every .env variant, then re-allow the committed templates. The previous
+# `.env` + `.env*.local` pair missed .env.production / .env.development, which
+# is exactly the file someone creates in a hurry before a deploy.
+.env*
+!.env*.example
+
+# vercel
+.vercel
+
+# trigger.dev local state
+.trigger/
+
+# repomix / context dumps — regenerated artifacts that duplicate the whole repo
+repomix-output.*
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# drizzle
+/drizzle/meta

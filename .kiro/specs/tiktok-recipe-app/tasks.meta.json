@@ -1,0 +1,949 @@
+{
+  "pbtResults": {
+    "15.2 Write property test for URL validation": {
+      "status": "passed",
+      "lastRunTimestamp": 1785090607062
+    },
+    "15.5 Write property test for recipe serialization round-trip": {
+      "status": "passed",
+      "lastRunTimestamp": 1785090640747
+    },
+    "15.13 Write property test for handle format validation": {
+      "status": "passed",
+      "lastRunTimestamp": 1785090666457
+    },
+    "15.11 Write property test for edit input validation": {
+      "status": "passed",
+      "lastRunTimestamp": 1785090676800
+    },
+    "15.10 Write property test for tag validation": {
+      "status": "passed",
+      "lastRunTimestamp": 1785090717718
+    },
+    "15.3 Write property test for recipe content detection": {
+      "status": "passed",
+      "lastRunTimestamp": 1785090808802
+    },
+    "15.4 Write property test for parser output structural validity": {
+      "status": "passed",
+      "lastRunTimestamp": 1785090828311
+    },
+    "15.12 Write property test for URL canonicalization determinism": {
+      "status": "passed",
+      "lastRunTimestamp": 1785090833123
+    },
+    "15.7 Write property test for cookbook save idempotence": {
+      "status": "passed",
+      "lastRunTimestamp": 1785090851665
+    },
+    "15.8 Write property test for cookbook default sort order": {
+      "status": "passed",
+      "lastRunTimestamp": 1785090852407
+    },
+    "15.9 Write property test for cookbook search relevance": {
+      "status": "passed",
+      "lastRunTimestamp": 1785090853165
+    }
+  },
+  "executionHistory": {
+    "1.1 Initialize Next.js 15 project with App Router, Tailwind CSS v4, and TypeScript configuration": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084266952
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084275903
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785086884285
+      }
+    ],
+    "1.2 Define core TypeScript types and Zod schemas": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267022
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785086888699
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785087102328
+      }
+    ],
+    "1.3 Implement URL validation and canonicalization utilities": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267066
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785086889284
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785087103133
+      }
+    ],
+    "1.4 Implement slug generation and validation utilities": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267086
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785086890025
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785087103721
+      }
+    ],
+    "2.1 Create Drizzle ORM schema and database connection": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267104
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785087112058
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785087275653
+      }
+    ],
+    "2.2 Generate and verify initial database migration": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267131
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785087279474
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785088365843
+      }
+    ],
+    "3.1 Configure Better-Auth with Drizzle adapter": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267153
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785087279999
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785088366580
+      }
+    ],
+    "3.2 Implement auth middleware for protected routes": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267176
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785088370914
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785088581671
+      }
+    ],
+    "3.3 Create authentication pages": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267193
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785088371617
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785088582376
+      }
+    ],
+    "4. Checkpoint - Ensure project scaffolding compiles and auth flow works": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267212
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785088592504
+      }
+    ],
+    "5.1 Implement recipe content detection logic": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267230
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785088593443
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089069003
+      }
+    ],
+    "5.2 Implement LLM recipe parser with Vercel AI SDK": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267249
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785088593995
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089068242
+      }
+    ],
+    "5.3 Implement recipe serialization and deserialization": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267266
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785088594933
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089067402
+      }
+    ],
+    "5.4 Implement opt-out cache with stale-while-revalidate pattern": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267284
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785088595529
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089069856
+      }
+    ],
+    "5.5 Implement extraction strategy functions": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267302
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089074211
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089187086
+      }
+    ],
+    "6.1 Configure Trigger.dev v3 and create extraction job task": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267328
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089191292
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089306082
+      }
+    ],
+    "6.2 Implement submission Server Action with ingest gating": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267348
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089310535
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089404162
+      }
+    ],
+    "6.3 Implement job status polling endpoint": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267367
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089311180
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089404846
+      }
+    ],
+    "7. Checkpoint - Ensure extraction pipeline compiles and unit tests pass": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267385
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089410296
+      }
+    ],
+    "8.1 Create recipe page with video embed and attribution": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267403
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089411179
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089571401
+      }
+    ],
+    "8.2 Implement Cook Mode component": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267420
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089411944
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089573834
+      }
+    ],
+    "8.3 Implement URL submission UI and extraction progress": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267437
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089412751
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089573185
+      }
+    ],
+    "9.1 Implement cookbook Server Actions": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267456
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089413360
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089572246
+      }
+    ],
+    "9.2 Implement cookbook query functions": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267475
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089414069
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089570632
+      }
+    ],
+    "9.3 Create cookbook page UI": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267493
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089578230
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089685986
+      }
+    ],
+    "10.1 Implement recipe edit Server Action": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267513
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089578980
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089685407
+      }
+    ],
+    "10.2 Create edit modal component": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267535
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089690116
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089812957
+      }
+    ],
+    "11. Checkpoint - Ensure cookbook and edit features work end-to-end": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267553
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089817800
+      }
+    ],
+    "12.1 Create public share page with SSR": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267571
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089818736
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089947843
+      }
+    ],
+    "12.2 Implement OG meta tags and dynamic OG image generation": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267590
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089819357
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089948703
+      }
+    ],
+    "13.1 Create creator opt-out portal page": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267608
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089953303
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090120988
+      }
+    ],
+    "13.2 Implement opt-out Server Actions and reversal": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267625
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089953885
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090121912
+      }
+    ],
+    "14. Checkpoint - Full feature integration check": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267643
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090144295
+      }
+    ],
+    "17. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785084267660
+      },
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090152205
+      }
+    ],
+    "1. Project scaffolding and core configuration": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785087103754
+      }
+    ],
+    "2. Database schema and migrations": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785088365866
+      }
+    ],
+    "3. Authentication setup": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785088582398
+      }
+    ],
+    "5. Core extraction pipeline": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089187118
+      }
+    ],
+    "6. Background job infrastructure (Trigger.dev)": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089404880
+      }
+    ],
+    "8. Recipe page and Cook Mode": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089573863
+      }
+    ],
+    "9. Personal Cookbook": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089686016
+      }
+    ],
+    "10. Recipe Edit Modal": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089813001
+      }
+    ],
+    "12. Public share pages and OG images": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785089948728
+      }
+    ],
+    "13. Creator opt-out system": [
+      {
+        "executionId": "475ea3bb-0035-429b-8942-0099c02c68ea",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090121942
+      }
+    ],
+    "15.1 Create shared test generators (arbitraries)": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090353985
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090381659
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090558346
+      }
+    ],
+    "15.2 Write property test for URL validation": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090354633
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090563767
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090735017
+      }
+    ],
+    "15.3 Write property test for recipe content detection": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090355328
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090746213
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090875751
+      }
+    ],
+    "15.4 Write property test for parser output structural validity": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090356028
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090747236
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090872083
+      }
+    ],
+    "15.5 Write property test for recipe serialization round-trip": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090356894
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090564630
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090735816
+      }
+    ],
+    "15.6 Write property test for deserialization error handling": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090357526
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090738748
+      }
+    ],
+    "15.7 Write property test for cookbook save idempotence": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090358226
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090748137
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090872880
+      }
+    ],
+    "15.8 Write property test for cookbook default sort order": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090358995
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090748863
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090873525
+      }
+    ],
+    "15.9 Write property test for cookbook search relevance": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090359703
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090749802
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090874285
+      }
+    ],
+    "15.10 Write property test for tag validation": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090360407
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090565410
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090736426
+      }
+    ],
+    "15.11 Write property test for edit input validation": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090361094
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090566259
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090737180
+      }
+    ],
+    "15.12 Write property test for URL canonicalization determinism": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090361922
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090875044
+      }
+    ],
+    "15.13 Write property test for handle format validation": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090362644
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090567154
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090737931
+      }
+    ],
+    "16.1 Write integration tests for extraction flow": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090363310
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090883225
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785091022291
+      }
+    ],
+    "16.2 Write integration tests for cookbook operations": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090364015
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090883975
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785091023658
+      }
+    ],
+    "16.3 Write integration tests for creator opt-out lifecycle": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090364764
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090885005
+      },
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785091023036
+      }
+    ],
+    "15. Property-based tests": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785090558384
+      }
+    ],
+    "16. Integration tests": [
+      {
+        "executionId": "7eca5c7c-e4a2-4c14-b0ff-0a396a63228b",
+        "chatSessionId": "sess_5acd2f40-8667-40df-ade4-687b099f1afb",
+        "timestamp": 1785091022338
+      }
+    ]
+  }
+}
