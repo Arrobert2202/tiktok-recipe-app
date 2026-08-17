@@ -512,8 +512,17 @@ export async function submitWithDataFusion(
     throw error;
   }
 
-  // 8. Create recipe record
+  // 8. Create recipe record.
+  //
+  // A client-supplied transcript is arbitrary text from the browser, fed to
+  // the LLM and attributed to a real creator's name and profile. It is not
+  // published as public/cached content: `isPublic: false` keeps it off the
+  // public /r/[slug] share page (and out of the sitemap and OG image route,
+  // which both gate on the same flag), so an attacker-controlled transcript
+  // can't get indexed under someone else's name. The submitter can still see
+  // and save their own result via /recipe/[id], which has no such gate.
   const slug = generateSlug();
+  const isClientTranscript = !!transcript;
 
   const [recipe] = await db
     .insert(recipes)
@@ -528,13 +537,19 @@ export async function submitWithDataFusion(
       creatorDisplayName: oembedMeta?.authorName,
       creatorProfileUrl: oembedMeta?.authorUrl ?? `https://www.tiktok.com/@${creatorHandle}`,
       thumbnailUrl: oembedMeta?.thumbnailUrl,
-      extractionStrategy: transcript ? "data_fusion" : "oembed_caption",
+      extractionStrategy: isClientTranscript ? "data_fusion" : "oembed_caption",
       extractionDurationMs: 0,
+      isPublic: !isClientTranscript,
     })
     .returning({ id: recipes.id, slug: recipes.slug, title: recipes.title });
 
-  // 9. Cache result
-  await db.insert(recipeCache).values({ canonicalUrl, recipeId: recipe.id }).onConflictDoNothing();
+  // 9. Cache result — skipped for a client-supplied transcript. recipe_cache is
+  // global and keyed only on canonical URL, so caching this would silently
+  // serve the same unverified content to every other user (including
+  // submitTikTokUrl's audio-transcribed result) who later requests this URL.
+  if (!isClientTranscript) {
+    await db.insert(recipeCache).values({ canonicalUrl, recipeId: recipe.id }).onConflictDoNothing();
+  }
 
   // 10. Charge 1 credit after successful extraction. Uses the same atomic
   // claim as submitTikTokUrl so the decrement itself can't race, even though

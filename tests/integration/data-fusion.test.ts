@@ -64,6 +64,7 @@ vi.mock("@/lib/url", async (importOriginal) => {
 
 import { submitWithDataFusion } from "@/actions/extraction";
 import { db } from "@/db";
+import { recipes, recipeCache } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { fetchOembedMetadata } from "@/trigger/strategies/oembed";
 import { parseRecipeFromText } from "@/lib/recipe-parser";
@@ -79,6 +80,10 @@ const TRANSCRIPT = "First we sear the steak, then we rest it for ten minutes.";
  *
  * `db.select` is only used here by `getUserCredits`, which awaits `.where()`
  * directly (no `.limit()`) and destructures an array.
+ *
+ * Returns `insertValuesMock`, shared across every `db.insert(...)` call
+ * (recipes and recipe_cache aren't distinguished by table here) so a test can
+ * inspect the payloads and count of whichever inserts actually happened.
  */
 function mockReadyToParse({ credits = 3 }: { credits?: number } = {}) {
   vi.mocked(auth.api.getSession).mockResolvedValue({
@@ -100,14 +105,13 @@ function mockReadyToParse({ credits = 3 }: { credits?: number } = {}) {
     }),
   } as never);
 
-  vi.mocked(db.insert).mockReturnValue({
-    values: vi.fn().mockReturnValue({
-      returning: vi.fn().mockResolvedValue([
-        { id: "recipe-1", slug: "abc123def456", title: "Seared Steak" },
-      ]),
-      onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
-    }),
-  } as never);
+  const insertValuesMock = vi.fn().mockReturnValue({
+    returning: vi.fn().mockResolvedValue([
+      { id: "recipe-1", slug: "abc123def456", title: "Seared Steak" },
+    ]),
+    onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
+  });
+  vi.mocked(db.insert).mockReturnValue({ values: insertValuesMock } as never);
 
   vi.mocked(fetchOembedMetadata).mockResolvedValue({
     title: "steak time",
@@ -115,6 +119,8 @@ function mockReadyToParse({ credits = 3 }: { credits?: number } = {}) {
     authorUrl: "https://www.tiktok.com/@chef.mike",
     thumbnailUrl: "https://example.com/thumb.jpg",
   });
+
+  return { insertValuesMock };
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -218,6 +224,63 @@ describe("submitWithDataFusion - parse failure handling", () => {
     const { error } = result as { error: { code: string } };
     expect(error.code).toBe("RATE_LIMITED");
     expect(parseRecipeFromText).not.toHaveBeenCalled();
+  });
+});
+
+// ─── Client-transcript exposure ───────────────────────────────────────────────
+
+/**
+ * A client-supplied transcript is arbitrary browser-submitted text, parsed by
+ * the LLM and attributed to a real creator's name and profile. These tests
+ * pin that such a result never reaches recipe_cache (global, keyed only on
+ * canonical URL — caching it would silently serve it to other users who
+ * request the same URL) and is saved with isPublic: false (keeps it off the
+ * public /r/[slug] share page, sitemap, and OG route).
+ */
+describe("submitWithDataFusion - client-transcript recipes stay private", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("saves isPublic: false and skips the cache insert when a transcript is supplied", async () => {
+    const { insertValuesMock } = mockReadyToParse();
+    vi.mocked(parseRecipeFromText).mockResolvedValue({
+      title: "Seared Steak",
+      ingredients: [{ name: "steak", quantity: "1", unit: "" }],
+      steps: ["Sear it", "Rest it"],
+      tipsAndTricks: ["Rest for ten minutes"],
+    });
+
+    await submitWithDataFusion(VALID_URL, TRANSCRIPT);
+
+    // Only the recipe insert happens — no recipe_cache write.
+    expect(db.insert).toHaveBeenCalledTimes(1);
+    expect(db.insert).toHaveBeenCalledWith(recipes);
+    expect(db.insert).not.toHaveBeenCalledWith(recipeCache);
+
+    expect(insertValuesMock).toHaveBeenCalledWith(
+      expect.objectContaining({ isPublic: false, extractionStrategy: "data_fusion" })
+    );
+  });
+
+  it("saves isPublic: true and caches the result when there is no transcript", async () => {
+    const { insertValuesMock } = mockReadyToParse();
+    vi.mocked(parseRecipeFromText).mockResolvedValue({
+      title: "Seared Steak",
+      ingredients: [{ name: "steak", quantity: "1", unit: "" }],
+      steps: ["Sear it", "Rest it"],
+      tipsAndTricks: ["Rest for ten minutes"],
+    });
+
+    await submitWithDataFusion(VALID_URL, undefined);
+
+    // Both the recipe insert and the recipe_cache insert happen.
+    expect(db.insert).toHaveBeenCalledTimes(2);
+    expect(db.insert).toHaveBeenCalledWith(recipeCache);
+
+    expect(insertValuesMock).toHaveBeenCalledWith(
+      expect.objectContaining({ isPublic: true, extractionStrategy: "oembed_caption" })
+    );
   });
 });
 

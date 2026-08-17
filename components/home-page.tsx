@@ -117,7 +117,11 @@ function HomePageInner() {
             return;
           }
 
-          router.push(`/r/${result.recipe.slug}`);
+          // Not `/r/${slug}`: a data-fusion recipe built from a client-supplied
+          // transcript is saved with isPublic: false (see submitWithDataFusion),
+          // so the public share page would 404-equivalent it. /recipe/[id] has
+          // no such gate and is where the submitter views their own result.
+          router.push(`/recipe/${result.recipe.id}`);
         } else {
           // Original path: URL only
           const result: SubmitResult = await submitTikTokUrl(trimmed, language);

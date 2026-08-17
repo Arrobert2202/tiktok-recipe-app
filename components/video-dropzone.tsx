@@ -16,8 +16,11 @@ export function VideoDropzone({ onTranscriptReady, disabled }: VideoDropzoneProp
   const [error, setError] = useState<string | null>(null);
 
   const handleFile = useCallback(async (file: File) => {
-    if (file.size > 25 * 1024 * 1024) {
-      setError("File too large. Max 25MB.");
+    // Matches MAX_UPLOAD_BYTES in app/api/transcribe/route.ts — Vercel caps
+    // route handler request bodies at ~4.5MB, well under the 25MB Whisper
+    // itself accepts.
+    if (file.size > 4 * 1024 * 1024) {
+      setError("File too large. Max 4MB.");
       setStatus("error");
       return;
     }
@@ -98,7 +101,7 @@ export function VideoDropzone({ onTranscriptReady, disabled }: VideoDropzoneProp
               <span className="text-purple-400 font-medium">Upload video</span> for better accuracy
             </p>
             <p className="text-xs text-white/30">
-              Optional &middot; Drag &amp; drop or click &middot; MP4, WebM (max 25MB)
+              Optional &middot; Drag &amp; drop or click &middot; MP4, WebM (max 4MB)
             </p>
           </div>
         )}

@@ -1,16 +1,44 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { transcribeAudio } from "@/lib/whisper";
+import { hasCredits } from "@/lib/credits";
+import { tryConsumeUserAction } from "@/lib/user-limit";
 
 export const runtime = "nodejs";
 
 export const maxDuration = 60;
+
+// Vercel serverless functions cap request bodies at roughly 4.5MB regardless
+// of next.config.ts's serverActions.bodySizeLimit, which only applies to
+// Server Actions, not route handlers like this one. The previous 25MB check
+// advertised a size the platform would already have rejected.
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 
 export async function POST(request: Request) {
   // Auth check
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Credit + rate-limit gate. Every call here reaches Whisper and is billed
+  // to us regardless of whether the caller ever submits the transcript for
+  // extraction, so a credit check alone isn't enough — a user could still
+  // call this in a loop as long as their balance stays positive. The credit
+  // itself isn't spent here; submitWithDataFusion charges it on success, so
+  // this only rejects zero-balance users rather than double-charging.
+  if (!(await hasCredits(session.user.id))) {
+    return NextResponse.json(
+      { error: "You've used all your free recipes. Upgrade to Pro for unlimited extractions." },
+      { status: 402 }
+    );
+  }
+
+  if (!(await tryConsumeUserAction(session.user.id, "transcribe"))) {
+    return NextResponse.json(
+      { error: "Too many transcription attempts. Please wait a bit and try again." },
+      { status: 429 }
+    );
   }
 
   try {
@@ -24,10 +52,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate file size (25MB max for Whisper)
-    if (file.size > 25 * 1024 * 1024) {
+    // Validate file size
+    if (file.size > MAX_UPLOAD_BYTES) {
       return NextResponse.json(
-        { error: "File too large. Maximum size is 25MB." },
+        { error: "File too large. Maximum size is 4MB." },
         { status: 400 }
       );
     }
