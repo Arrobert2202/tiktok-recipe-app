@@ -210,46 +210,31 @@ let insertValuesMock: ReturnType<typeof vi.fn>;
  * Mocks the full cache-miss path: no cached recipe, no in-progress job, and a
  * user with `credits` remaining.
  *
- * db.select is called three times in sequence by submitTikTokUrl:
+ * db.select is called twice in sequence by submitTikTokUrl:
  *   1. recipe cache lookup      → .from().where().limit()  → []
  *   2. in-progress job lookup   → .from().where().limit()  → []
- *   3. getUserCredits           → .from().where()          → [{ credits }]
  *
- * Note the third call is awaited straight off `.where()` (no `.limit()`) and is
- * destructured as an array, so it must resolve to a row array.
+ * The credit check and charge are a single `claimCredit` call — one
+ * db.update(users).set(...).where(...).returning(...) — rather than a
+ * separate SELECT. A `credits` of 0 simulates the WHERE clause (id AND
+ * credits > 0) matching no rows, the same as a real database.
  */
 function mockNewJobCreation({ credits = 3 }: { credits?: number } = {}) {
-  let selectCallCount = 0;
-
-  vi.mocked(db.select).mockImplementation(() => {
-    selectCallCount++;
-
-    // Credits lookup inside getUserCredits
-    if (selectCallCount >= 3) {
-      return {
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([{ credits }]),
-        }),
-      } as any;
-    }
-
-    // Cache miss + no existing job
-    return {
-      from: vi.fn().mockReturnValue({
-        where: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue([]),
-        }),
+  vi.mocked(db.select).mockReturnValue({
+    from: vi.fn().mockReturnValue({
+      where: vi.fn().mockReturnValue({
+        limit: vi.fn().mockResolvedValue([]),
       }),
-    } as any;
-  });
+    }),
+  } as any);
 
-  // decrementCredits: db.update(users).set(...).where(...).returning(...)
+  // claimCredit: db.update(users).set(...).where(...).returning(...)
   vi.mocked(db.update).mockReturnValue({
     set: vi.fn().mockReturnValue({
       where: vi.fn().mockReturnValue({
-        returning: vi.fn().mockResolvedValue([
-          { credits: Math.max(credits - 1, 0) },
-        ]),
+        returning: vi.fn().mockResolvedValue(
+          credits > 0 ? [{ credits: credits - 1 }] : []
+        ),
       }),
     }),
   } as any);
@@ -427,10 +412,25 @@ describe("submitTikTokUrl - extraction flow integration", () => {
         },
       });
 
-      // No money spent: no job row, no credit decrement, no task run
+      // The atomic claim still issues its UPDATE (that's how the database
+      // tells "zero credits" from "row disappeared"), but it claims nothing,
+      // and nothing downstream of it runs: no job row, no task.
+      expect(db.update).toHaveBeenCalledTimes(1);
       expect(db.insert).not.toHaveBeenCalled();
-      expect(db.update).not.toHaveBeenCalled();
       expect(tasks.trigger).not.toHaveBeenCalled();
+    });
+
+    it("issues the credit claim as a single atomic UPDATE guarded by credits > 0", async () => {
+      mockAuthenticated();
+      mockNotOptedOut();
+      mockNewJobCreation({ credits: 3 });
+
+      await submitTikTokUrl(VALID_URL);
+
+      // One UPDATE does the whole claim — no preceding SELECT reads the
+      // balance, which is what makes it safe under concurrent submissions.
+      expect(db.update).toHaveBeenCalledTimes(1);
+      expect(db.update).toHaveBeenCalledWith(users);
     });
   });
 

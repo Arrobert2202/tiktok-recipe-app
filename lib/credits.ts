@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, gt, sql } from "drizzle-orm";
 
 /**
  * Get the current credit count for a user.
@@ -14,16 +14,27 @@ export async function getUserCredits(userId: string): Promise<number> {
 }
 
 /**
- * Decrement a user's credits by 1. Returns the new credit count.
- * Only decrements if credits > 0.
+ * Atomically claims 1 credit for a user. Returns the new balance, or `null`
+ * if the user had no credits to claim.
+ *
+ * The guard lives in the WHERE clause of a single UPDATE, the same pattern
+ * `refundCreditForFailedJob` uses for the refund side: the database decides
+ * who wins under concurrent submissions, rather than an application-side
+ * check-then-act. A prior version split this into `hasCredits()` followed by
+ * a separate `decrementCredits()`, which left a window where two concurrent
+ * requests could both read a positive balance and both decrement, driving
+ * the balance negative.
+ *
+ * Returning `null` on failure (rather than throwing) lets a caller distinguish
+ * "charged" from "no credits left" without a second query.
  */
-export async function decrementCredits(userId: string): Promise<number> {
-  const [updated] = await db
+export async function claimCredit(userId: string): Promise<number | null> {
+  const [claimed] = await db
     .update(users)
     .set({ credits: sql`${users.credits} - 1` })
-    .where(eq(users.id, userId))
+    .where(and(eq(users.id, userId), gt(users.credits, 0)))
     .returning({ credits: users.credits });
-  return updated?.credits ?? 0;
+  return claimed?.credits ?? null;
 }
 
 /**

@@ -140,10 +140,21 @@ export async function submitTikTokUrl(url: string, language?: string): Promise<S
     };
   }
 
-  // 9. Credit check (only on cache miss — this costs money)
-  const { hasCredits: userHasCredits, decrementCredits } = await import("@/lib/credits");
-  const hasCreditAvailable = await userHasCredits(session.user.id);
-  if (!hasCreditAvailable) {
+  // 9-10. Claim a credit atomically (only on cache miss — this costs money).
+  //
+  // The charge is deliberately upfront rather than on success. Deferring it would
+  // let a user fire N concurrent jobs while the balance still reads 3, since
+  // nothing would deduct until the first one finished — the limit would be
+  // trivially bypassable. `claimCredit` folds the check and the charge into one
+  // conditional UPDATE, so two concurrent submissions can't both read a positive
+  // balance and both proceed — the database picks a single winner.
+  //
+  // The cost of that ordering is that a job which fails has already taken the
+  // credit, so the extraction job refunds it from its failure path (exactly once,
+  // guarded by extractionJobs.creditRefunded).
+  const { claimCredit } = await import("@/lib/credits");
+  const newBalance = await claimCredit(session.user.id);
+  if (newBalance === null) {
     return {
       error: createError(
         "INSUFFICIENT_CREDITS",
@@ -151,19 +162,6 @@ export async function submitTikTokUrl(url: string, language?: string): Promise<S
       ),
     };
   }
-
-  // 10. Decrement credits before starting extraction.
-  //
-  // The charge is deliberately upfront rather than on success. Deferring it would
-  // let a user fire N concurrent jobs while the balance still reads 3, since
-  // nothing would deduct until the first one finished — the limit would be
-  // trivially bypassable. Charging here means each submission lowers the balance
-  // before the next credit check can run.
-  //
-  // The cost of that ordering is that a job which fails has already taken the
-  // credit, so the extraction job refunds it from its failure path (exactly once,
-  // guarded by extractionJobs.creditRefunded).
-  await decrementCredits(session.user.id);
 
   // 11. Fetch oEmbed metadata for creator info
   const oembedMeta = await fetchOembedMetadata(canonicalUrl);
@@ -510,9 +508,11 @@ export async function submitWithDataFusion(
   // 9. Cache result
   await db.insert(recipeCache).values({ canonicalUrl, recipeId: recipe.id }).onConflictDoNothing();
 
-  // 10. Decrement credits after successful extraction
-  const { decrementCredits } = await import("@/lib/credits");
-  await decrementCredits(session.user.id);
+  // 10. Charge 1 credit after successful extraction. Uses the same atomic
+  // claim as submitTikTokUrl so the decrement itself can't race, even though
+  // the check-then-act gap between step 5 and here is unchanged for now.
+  const { claimCredit } = await import("@/lib/credits");
+  await claimCredit(session.user.id);
 
   return { success: true, recipe: { id: recipe.id, slug: recipe.slug, title: recipe.title } };
 }

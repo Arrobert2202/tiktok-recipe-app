@@ -19,7 +19,7 @@ vi.mock("@/db", () => ({
   },
 }));
 
-import { refundCredit, decrementCredits, getUserCredits, hasCredits } from "./credits";
+import { refundCredit, claimCredit, getUserCredits, hasCredits } from "./credits";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 
@@ -42,27 +42,42 @@ function renderSqlExpression(expr: unknown): string {
 }
 
 /**
- * Stubs db.update(users) and captures the `set` payload so the test can inspect
- * the expression that would reach the database.
+ * Walks a drizzle SQL tree and collects every column name it references, so
+ * a test can assert a WHERE clause guards on a given column without depending
+ * on drizzle's internal AST shape.
+ */
+function collectColumnNames(node: unknown, out: string[] = []): string[] {
+  const n = node as { name?: string; queryChunks?: unknown[] };
+  if (n && typeof n === "object") {
+    if (typeof n.name === "string") out.push(n.name);
+    if (Array.isArray(n.queryChunks)) {
+      for (const chunk of n.queryChunks) collectColumnNames(chunk, out);
+    }
+  }
+  return out;
+}
+
+/**
+ * Stubs db.update(users) and captures the `set` payload plus the `where`
+ * clause so a test can inspect both the expression and the guard that would
+ * reach the database.
  */
 function mockUsersUpdate(newCredits: number) {
-  const setMock = vi.fn().mockReturnValue({
-    where: vi.fn().mockReturnValue({
-      returning: vi.fn().mockResolvedValue([{ credits: newCredits }]),
-    }),
+  const whereMock = vi.fn().mockReturnValue({
+    returning: vi.fn().mockResolvedValue([{ credits: newCredits }]),
   });
+  const setMock = vi.fn().mockReturnValue({ where: whereMock });
   vi.mocked(db.update).mockReturnValue({ set: setMock } as never);
-  return setMock;
+  return { setMock, whereMock };
 }
 
 function mockUsersUpdateReturningNothing() {
-  const setMock = vi.fn().mockReturnValue({
-    where: vi.fn().mockReturnValue({
-      returning: vi.fn().mockResolvedValue([]),
-    }),
+  const whereMock = vi.fn().mockReturnValue({
+    returning: vi.fn().mockResolvedValue([]),
   });
+  const setMock = vi.fn().mockReturnValue({ where: whereMock });
   vi.mocked(db.update).mockReturnValue({ set: setMock } as never);
-  return setMock;
+  return { setMock, whereMock };
 }
 
 function mockCreditsSelect(rows: Array<{ credits: number }>) {
@@ -79,7 +94,7 @@ beforeEach(() => {
 
 describe("refundCredit", () => {
   it("increments the balance by 1 and returns the new count", async () => {
-    const setMock = mockUsersUpdate(3);
+    const { setMock } = mockUsersUpdate(3);
 
     const result = await refundCredit("user-1");
 
@@ -106,26 +121,64 @@ describe("refundCredit", () => {
   });
 });
 
-describe("decrementCredits", () => {
+describe("claimCredit", () => {
   it("decrements the balance by 1 and returns the new count", async () => {
-    const setMock = mockUsersUpdate(2);
+    const { setMock } = mockUsersUpdate(2);
 
-    const result = await decrementCredits("user-1");
+    const result = await claimCredit("user-1");
 
     expect(result).toBe(2);
 
     const setPayload = setMock.mock.calls[0][0];
     expect(renderSqlExpression(setPayload.credits)).toBe("credits - 1");
   });
+
+  it("computes the new balance DB-side, not by reading then writing", async () => {
+    mockUsersUpdate(2);
+
+    await claimCredit("user-1");
+
+    // A read-modify-write (the old hasCredits + decrementCredits pair) would
+    // have had to SELECT the balance first, leaving a window for a concurrent
+    // request to read the same stale value.
+    expect(db.select).not.toHaveBeenCalled();
+  });
+
+  it("issues a single UPDATE guarded by both id and credits > 0", async () => {
+    const { whereMock } = mockUsersUpdate(2);
+
+    await claimCredit("user-1");
+
+    expect(db.update).toHaveBeenCalledTimes(1);
+    const whereClause = whereMock.mock.calls[0][0];
+    const columns = collectColumnNames(whereClause);
+    expect(columns).toContain("id");
+    expect(columns).toContain("credits");
+  });
+
+  it("returns null, without writing, when the user has zero credits", async () => {
+    const { setMock } = mockUsersUpdateReturningNothing();
+
+    const result = await claimCredit("user-1");
+
+    // The WHERE clause matched nothing (credits > 0 was false), so RETURNING
+    // came back empty — this is what a real database does when a concurrent
+    // claim already drained the balance to zero.
+    expect(result).toBeNull();
+    // The claim was still attempted as one statement, not skipped by a
+    // pre-check — there's nothing to distinguish "no rows matched" from
+    // "we never asked" other than the empty RETURNING result.
+    expect(setMock).toHaveBeenCalledTimes(1);
+  });
 });
 
-describe("refundCredit / decrementCredits symmetry", () => {
+describe("refundCredit / claimCredit symmetry", () => {
   it("uses opposing operators on the same column", async () => {
-    const decrementSet = mockUsersUpdate(2);
-    await decrementCredits("user-1");
+    const { setMock: decrementSet } = mockUsersUpdate(2);
+    await claimCredit("user-1");
     const decrementExpr = renderSqlExpression(decrementSet.mock.calls[0][0].credits);
 
-    const refundSet = mockUsersUpdate(3);
+    const { setMock: refundSet } = mockUsersUpdate(3);
     await refundCredit("user-1");
     const refundExpr = renderSqlExpression(refundSet.mock.calls[0][0].credits);
 
