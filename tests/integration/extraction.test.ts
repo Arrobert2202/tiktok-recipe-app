@@ -51,6 +51,10 @@ vi.mock("@/lib/opt-out-cache", () => ({
   isCreatorOptedOut: vi.fn(),
 }));
 
+vi.mock("@/lib/user-limit", () => ({
+  tryConsumeUserAction: vi.fn().mockResolvedValue(true),
+}));
+
 vi.mock("@/trigger/strategies/oembed", () => ({
   fetchOembedMetadata: vi.fn(),
 }));
@@ -85,6 +89,7 @@ import { isCreatorOptedOut } from "@/lib/opt-out-cache";
 import { fetchOembedMetadata } from "@/trigger/strategies/oembed";
 import { canonicalizeTikTokUrl } from "@/lib/url";
 import { tasks } from "@trigger.dev/sdk/v3";
+import { tryConsumeUserAction } from "@/lib/user-limit";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -431,6 +436,27 @@ describe("submitTikTokUrl - extraction flow integration", () => {
       // balance, which is what makes it safe under concurrent submissions.
       expect(db.update).toHaveBeenCalledTimes(1);
       expect(db.update).toHaveBeenCalledWith(users);
+    });
+  });
+
+  describe("rate limit", () => {
+    it("returns RATE_LIMITED without canonicalizing or spending a credit when over the limit", async () => {
+      mockAuthenticated();
+      vi.mocked(tryConsumeUserAction).mockResolvedValueOnce(false);
+
+      const result = await submitTikTokUrl(VALID_URL);
+
+      expect(result).toEqual({
+        error: {
+          code: "RATE_LIMITED",
+          message: "Too many extraction attempts. Please wait a bit and try again.",
+        },
+      });
+
+      // Rejected before any of the expensive/paid work below it runs.
+      expect(canonicalizeTikTokUrl).not.toHaveBeenCalled();
+      expect(db.update).not.toHaveBeenCalled();
+      expect(tasks.trigger).not.toHaveBeenCalled();
     });
   });
 

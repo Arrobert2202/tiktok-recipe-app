@@ -44,6 +44,21 @@ export async function submitTikTokUrl(url: string, language?: string): Promise<S
     };
   }
 
+  // 3a. Rate limit, ahead of any network call. Cache hits and in-progress-job
+  // dedupe (steps 7-8) never reach the credit charge, so without this a
+  // signed-in user could hammer the canonicalize/oEmbed/DB work below for
+  // free just by resubmitting.
+  const { tryConsumeUserAction } = await import("@/lib/user-limit");
+  const withinLimit = await tryConsumeUserAction(session.user.id, "extraction_submit");
+  if (!withinLimit) {
+    return {
+      error: createError(
+        "RATE_LIMITED",
+        "Too many extraction attempts. Please wait a bit and try again."
+      ),
+    };
+  }
+
   // 4. Canonicalize the URL
   let canonicalUrl: string;
   try {
@@ -405,6 +420,19 @@ export async function submitWithDataFusion(
   const session = await auth.api.getSession({ headers: requestHeaders });
   if (!session) {
     return { error: createError("UNAUTHORIZED", "You must be signed in") };
+  }
+
+  // 2a. Rate limit, ahead of any network call — see submitTikTokUrl for why
+  // this needs to run before the credit check rather than relying on it.
+  const { tryConsumeUserAction } = await import("@/lib/user-limit");
+  const withinLimit = await tryConsumeUserAction(session.user.id, "extraction_submit");
+  if (!withinLimit) {
+    return {
+      error: createError(
+        "RATE_LIMITED",
+        "Too many extraction attempts. Please wait a bit and try again."
+      ),
+    };
   }
 
   // 3. Canonicalize

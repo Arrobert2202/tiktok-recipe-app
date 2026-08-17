@@ -176,6 +176,30 @@ export const anonymousExtractions = pgTable(
   (table) => [index("idx_anon_ip_created").on(table.ipHash, table.createdAt)]
 );
 
+// ─── User Action Rate Limits ──────────────────────────────────────────────────
+// Per-user rate limiting for authenticated actions/routes that cost money
+// (extraction submissions, transcription), mirroring anonymous_extractions'
+// shape: one row per attempt, windowed by createdAt, counted rather than
+// aggregated so the check stays a simple range query.
+export const userActionLimits = pgTable(
+  "user_action_limits",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    action: varchar("action", { length: 30 }).notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("idx_user_action_limits_lookup").on(
+      table.userId,
+      table.action,
+      table.createdAt
+    ),
+  ]
+);
+
 // ─── Creator Opt-Out ─────────────────────────────────────────────────────────
 export const creatorOptOuts = pgTable(
   "creator_opt_outs",

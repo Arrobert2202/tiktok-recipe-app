@@ -38,6 +38,10 @@ vi.mock("@/lib/opt-out-cache", () => ({
   isCreatorOptedOut: vi.fn().mockResolvedValue(false),
 }));
 
+vi.mock("@/lib/user-limit", () => ({
+  tryConsumeUserAction: vi.fn().mockResolvedValue(true),
+}));
+
 vi.mock("@/trigger/strategies/oembed", () => ({
   fetchOembedMetadata: vi.fn(),
 }));
@@ -63,6 +67,7 @@ import { db } from "@/db";
 import { auth } from "@/lib/auth";
 import { fetchOembedMetadata } from "@/trigger/strategies/oembed";
 import { parseRecipeFromText } from "@/lib/recipe-parser";
+import { tryConsumeUserAction } from "@/lib/user-limit";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -200,6 +205,18 @@ describe("submitWithDataFusion - parse failure handling", () => {
     expect(result).toHaveProperty("error");
     const { error } = result as { error: { code: string } };
     expect(error.code).toBe("INSUFFICIENT_CREDITS");
+    expect(parseRecipeFromText).not.toHaveBeenCalled();
+  });
+
+  it("returns RATE_LIMITED before attempting a parse when over the limit", async () => {
+    mockReadyToParse();
+    vi.mocked(tryConsumeUserAction).mockResolvedValueOnce(false);
+
+    const result = await submitWithDataFusion(VALID_URL, TRANSCRIPT);
+
+    expect(result).toHaveProperty("error");
+    const { error } = result as { error: { code: string } };
+    expect(error.code).toBe("RATE_LIMITED");
     expect(parseRecipeFromText).not.toHaveBeenCalled();
   });
 });
