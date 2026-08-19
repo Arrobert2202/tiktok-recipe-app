@@ -4,6 +4,23 @@
 
 This plan implements a micro-SaaS that extracts structured recipes from TikTok videos using a multi-strategy extraction pipeline with LLM parsing. The implementation follows a bottom-up approach: foundational infrastructure first (project setup, DB, auth), then core extraction logic, then user-facing features (cookbook, sharing, cook mode), and finally the creator opt-out system.
 
+## Status (reconciled 19 August 2026)
+
+This file originally marked all 17 tasks complete. An audit
+(`docs/AUDIT-2026-08-17.md`) found that wasn't accurate for three of
+them — see the notes on 5.3, 5.5, and 6.1 below, corrected here to match
+what the code actually does. 13.2 was a genuine stub at audit time and has
+since been implemented for real (`docs/STEP-4-CREATOR-OPTOUT.md`).
+
+This file is not being kept as a live status document going forward — a
+lot has changed since it was written that it never described in the first
+place (`submitAnonymousUrl` and `submitWithDataFusion`, two entire
+extraction entry points beyond the `submitTikTokUrl` this file documents,
+plus everything in the audit's remediation steps). Treat
+`docs/AUDIT-2026-08-17.md`'s status log and the `docs/STEP-*.md` files as
+the authoritative, current record; this file is a historical plan, useful
+for what it originally intended, not for what shipped since.
+
 ## Tasks
 
 - [x] 1. Project scaffolding and core configuration
@@ -77,11 +94,9 @@ This plan implements a micro-SaaS that extracts structured recipes from TikTok v
     - Return structured error if LLM cannot identify ingredients/steps
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [x] 5.3 Implement recipe serialization and deserialization
-    - Create `lib/recipe-serializer.ts` with `serialize(recipe: Recipe): string` and `deserialize(json: string): Recipe | ValidationError`
-    - Validate against Zod schema on deserialization, return structured errors for invalid/malformed JSON
-    - Preserve array ordering, numeric precision, and optional field presence/absence
-    - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
+  - [ ] 5.3 ~~Implement recipe serialization and deserialization~~ — never used, removed
+    - `lib/recipe-serializer.ts` was built (with tests) but had zero callers outside its own test suite — the actual insert/read path stores recipe content directly in Drizzle JSONB columns and never serializes to/from a JSON string. Deleted in the step 5 dead-code cleanup rather than left as unreachable code.
+    - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5 — not met by this task; if a real need for portable serialization surfaces later, revisit then._
 
   - [x] 5.4 Implement opt-out cache with stale-while-revalidate pattern
     - Create `lib/opt-out-cache.ts` with `isCreatorOptedOut(handle: string): Promise<boolean>`
@@ -89,18 +104,15 @@ This plan implements a micro-SaaS that extracts structured recipes from TikTok v
     - Fall back to stale cache if database is unavailable on refresh
     - _Requirements: 11.4, 11.5_
 
-  - [x] 5.5 Implement extraction strategy functions
-    - Create `trigger/strategies/oembed.ts` with `tryOembedCaption(canonicalUrl: string)` — fetches TikTok oEmbed API, checks caption for recipe content, 10s timeout
-    - Create `trigger/strategies/native-captions.ts` with `tryNativeCaptions(canonicalUrl: string)` — fetches subtitle tracks, parses VTT/SRT, 15s timeout
-    - Create `trigger/strategies/asr.ts` with `tryAsrTranscription(canonicalUrl: string)` — audio extraction + ASR service call, 60s timeout
-    - Create `trigger/strategies/index.ts` with `runExtractionLadder` orchestrator that runs strategies in order and records attempts
-    - _Requirements: 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8_
+  - [ ] 5.5 ~~Implement extraction strategy functions~~ — pluggable ladder never built; actual job hardcodes two strategies
+    - `native-captions.ts` and `asr.ts` were always-return-null placeholders; `runExtractionLadder`'s orchestrator had zero production callers — `trigger/extraction-job.ts` hardcodes oEmbed caption fetch → yt-dlp audio extract → Whisper transcription directly, and always has. All of it (the ladder, the two stubs, and the now-orphaned `tryOembedCaption` wrapper) deleted in the step 5 cleanup; `fetchOembedMetadata` (the part that's real) kept.
+    - _Requirements: 2.4 (native captions), 2.5–2.7 (ASR fallback ladder) — not met; the job's fixed two-strategy pipeline meets 2.2/2.3/2.8 directly instead._
 
 - [x] 6. Background job infrastructure (Trigger.dev)
   - [x] 6.1 Configure Trigger.dev v3 and create extraction job task
     - Create `trigger/extraction-job.ts` with `extractionJob` task (id: "extraction-job", maxDuration: 120s, retry: maxAttempts 1)
-    - Implement full flow: update status → run extraction ladder → LLM parse → create recipe record → cache result → mark job complete
-    - Handle failures: update job status to "failed" with error details and strategies attempted
+    - Implemented flow differs from the original plan: update status → fetch oEmbed caption → yt-dlp audio extract → Whisper transcription → LLM data-fusion parse → create recipe record (with `ownerId`) → cache result (keyed on canonical URL + language + quality tier, step 3) → mark job complete. Not "run extraction ladder" — there's no pluggable strategy list, just this fixed two-source pipeline (see 5.5).
+    - Handle failures: update job status to "failed" with error details and strategies attempted; refund the upfront credit exactly once (`refundCreditForFailedJob`, step 2)
     - _Requirements: 1.3, 2.6, 2.7, 2.8_
 
   - [x] 6.2 Implement submission Server Action with ingest gating
@@ -203,9 +215,9 @@ This plan implements a micro-SaaS that extracts structured recipes from TikTok v
     - _Requirements: 10.1, 10.2, 10.8_
 
   - [x] 13.2 Implement opt-out Server Actions and reversal
-    - Create `actions/creator.ts` with `submitOptOutRequest(handle, verificationToken)` and `reverseOptOut(handle, verificationToken)`
-    - On opt-out: insert `creatorOptOuts` record, set `recipes.is_public = false` for handle, delete `recipeCache` entries for handle, invalidate opt-out cache
-    - On reversal: set `reversed_at` timestamp, restore `is_public = true` on affected recipes
+    - Marked complete at spec-writing time but shipped as a stub — `submitOptOutRequest`/`reverseOptOut` validated input and returned `{success: true}` without touching the database; `isCreatorOptedOut` queried a permanently-empty table. Actually implemented 19 August 2026 (`docs/STEP-4-CREATOR-OPTOUT.md`).
+    - `actions/creator.ts`: `submitOptOutRequest(handle, email)` and `reverseOptOut(handle, email)` send an email confirmation link (Resend) rather than taking the signature the original plan describes (a token isn't an input the caller has yet — it's generated server-side and delivered by email); a new `confirmCreatorAction(token)`, invoked by a click on `/creators/verify`, claims it and applies the effect.
+    - On opt-out: insert/update `creatorOptOuts`, set `recipes.is_public = false` for the handle (case-insensitive), delete matching `recipeCache` entries, invalidate opt-out cache. On reversal: set `reversed_at`, restore `is_public = true`.
     - _Requirements: 10.3, 10.4, 10.5, 10.6, 10.7, 13.3_
 
 - [x] 14. Checkpoint - Full feature integration check
@@ -224,11 +236,9 @@ This plan implements a micro-SaaS that extracts structured recipes from TikTok v
     - Verify: all valid TikTok URL patterns accepted; all non-matching strings and URLs > 2048 chars rejected
     - **Validates: Requirements 1.1, 1.2, 1.6**
 
-  - [x]* 15.3 Write property test for recipe content detection
-    - **Property 2: Recipe Content Detection**
-    - Create `tests/properties/recipe-detection.property.test.ts`
-    - Verify: text with ingredient quantity + action verb → true; text missing either → false
-    - **Validates: Requirements 2.3**
+  - [ ]* 15.3 ~~Write property test for recipe content detection~~ — module removed
+    - `lib/recipe-detection.ts` (`hasRecipeContent` and friends) had no production callers — see 5.5 — and was deleted along with this test in the step 5 cleanup.
+    - **Validates: Requirements 2.3 — not met; the LLM parser decides recipe-ness on real caption/transcript text instead.**
 
   - [x]* 15.4 Write property test for parser output structural validity
     - **Property 3: Parser Output Structural Validity**
@@ -236,17 +246,13 @@ This plan implements a micro-SaaS that extracts structured recipes from TikTok v
     - Verify: successful parse output has title 1-200 chars, ≥1 ingredient with name, ≥1 step, all conforming to Zod schema
     - **Validates: Requirements 3.1, 3.2, 3.3**
 
-  - [x]* 15.5 Write property test for recipe serialization round-trip
-    - **Property 4: Recipe Serialization Round-Trip**
-    - Create `tests/properties/serialization.property.test.ts`
-    - Verify: serialize → deserialize produces deeply equal object preserving array order, numeric precision, optional field presence
-    - **Validates: Requirements 3.6, 14.1, 14.2, 14.3**
+  - [ ]* 15.5 ~~Write property test for recipe serialization round-trip~~ — module removed
+    - `lib/recipe-serializer.ts` had no production callers — see 5.3 — and was deleted along with this test in the step 5 cleanup.
+    - **Validates: Requirements 3.6, 14.1, 14.2, 14.3 — not met by this task.**
 
-  - [x]* 15.6 Write property test for deserialization error handling
-    - **Property 5: Deserialization Error Handling**
-    - Create `tests/properties/serialization.property.test.ts` (additional test in same file)
-    - Verify: invalid JSON or schema-non-conforming JSON returns structured error, never partial object or unhandled exception
-    - **Validates: Requirements 14.4, 14.5**
+  - [ ]* 15.6 ~~Write property test for deserialization error handling~~ — module removed
+    - Same removal as 15.5.
+    - **Validates: Requirements 14.4, 14.5 — not met by this task.**
 
   - [x]* 15.7 Write property test for cookbook save idempotence
     - **Property 6: Cookbook Save Idempotence**
