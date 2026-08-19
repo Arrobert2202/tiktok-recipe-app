@@ -1,13 +1,12 @@
 /**
- * oEmbed extraction strategy.
- *
- * Fetches TikTok's oEmbed API to retrieve the video caption (title field),
- * then passes it to the LLM for recipe extraction if it has meaningful content.
+ * Fetches TikTok's oEmbed API — video caption (title field) plus creator
+ * metadata (author name/url, thumbnail). Every extraction path uses this
+ * directly; the LLM decides whether the caption has recipe content.
  *
  * Timeout: 10 seconds.
  */
 
-import type { StrategyResult, OembedMetadata } from "./types";
+import type { OembedMetadata } from "./types";
 
 const OEMBED_TIMEOUT_MS = 10_000;
 
@@ -53,36 +52,4 @@ export async function fetchOembedMetadata(
   } finally {
     clearTimeout(timeout);
   }
-}
-
-/**
- * Attempts to extract recipe text from the TikTok video caption via oEmbed.
- *
- * Returns a StrategyResult if the caption has meaningful content (at least 10 chars),
- * or null otherwise. The LLM decides if it contains a recipe.
- */
-export async function tryOembedCaption(
-  canonicalUrl: string
-): Promise<StrategyResult | null> {
-  const start = Date.now();
-
-  const metadata = await fetchOembedMetadata(canonicalUrl);
-
-  if (!metadata) {
-    return null;
-  }
-
-  const caption = metadata.title;
-
-  // Accept any caption with meaningful content (at least 10 chars)
-  // Let the LLM decide if it contains a recipe
-  if (!caption || caption.trim().length < 10) {
-    return null;
-  }
-
-  return {
-    text: caption,
-    strategy: "oembed_caption",
-    durationMs: Date.now() - start,
-  };
 }
