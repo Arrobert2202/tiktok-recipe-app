@@ -25,8 +25,10 @@ export async function POST(request: Request) {
   // to us regardless of whether the caller ever submits the transcript for
   // extraction, so a credit check alone isn't enough — a user could still
   // call this in a loop as long as their balance stays positive. The credit
-  // itself isn't spent here; submitWithDataFusion charges it on success, so
-  // this only rejects zero-balance users rather than double-charging.
+  // itself isn't spent here; submitTikTokUrl's upfront claim (step 5's
+  // consolidation moved the video-upload path into the same job pipeline)
+  // charges it, so this only rejects zero-balance users rather than
+  // double-charging.
   if (!(await hasCredits(session.user.id))) {
     return NextResponse.json(
       { error: "You've used all your free recipes. Upgrade to Pro for unlimited extractions." },

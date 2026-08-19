@@ -59,6 +59,10 @@ vi.mock("@/trigger/strategies/oembed", () => ({
   fetchOembedMetadata: vi.fn(),
 }));
 
+vi.mock("@/lib/recipe-parser", () => ({
+  parseRecipeFromText: vi.fn(),
+}));
+
 // Mock canonicalizeTikTokUrl to avoid real network calls
 vi.mock("@/lib/url", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/url")>();
@@ -90,6 +94,8 @@ import { fetchOembedMetadata } from "@/trigger/strategies/oembed";
 import { canonicalizeTikTokUrl } from "@/lib/url";
 import { tasks } from "@trigger.dev/sdk/v3";
 import { tryConsumeUserAction } from "@/lib/user-limit";
+import { parseRecipeFromText } from "@/lib/recipe-parser";
+import { TextTooLongError } from "@/lib/errors";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -475,8 +481,11 @@ describe("submitTikTokUrl - extraction flow integration", () => {
     it("returns CANONICALIZATION_FAILED error for unresolvable short URLs", async () => {
       mockAuthenticated();
 
-      // Override canonicalizeTikTokUrl to throw for this test's URL
-      vi.mocked(canonicalizeTikTokUrl).mockRejectedValue(
+      // Override canonicalizeTikTokUrl to throw for this test's URL only —
+      // mockRejectedValueOnce so it doesn't leak into tests declared after
+      // this one (vi.clearAllMocks() in beforeEach clears call history, not
+      // a previously-set mock implementation).
+      vi.mocked(canonicalizeTikTokUrl).mockRejectedValueOnce(
         new Error("Could not resolve TikTok URL to canonical form")
       );
 
@@ -490,6 +499,139 @@ describe("submitTikTokUrl - extraction flow integration", () => {
         },
       });
     });
+  });
+
+  // Step 5's consolidation: the video-upload "better accuracy" feature
+  // (formerly the separate submitWithDataFusion action) now rides along as
+  // an extra input to this same job pipeline instead of running its own
+  // synchronous insert.
+  describe("clientTranscript (video-upload path folded into this pipeline)", () => {
+    it("includes clientTranscript in the trigger payload when provided", async () => {
+      mockAuthenticated();
+      mockNotOptedOut();
+      mockNewJobCreation();
+
+      await submitTikTokUrl(VALID_URL, undefined, "Sear the steak, rest ten minutes.");
+
+      expect(tasks.trigger).toHaveBeenCalledWith(
+        "extraction-job",
+        expect.objectContaining({ clientTranscript: "Sear the steak, rest ten minutes." })
+      );
+    });
+
+    it("omits clientTranscript from the payload when not provided", async () => {
+      mockAuthenticated();
+      mockNotOptedOut();
+      mockNewJobCreation();
+
+      await submitTikTokUrl(VALID_URL);
+
+      const payload = vi.mocked(tasks.trigger).mock.calls[0][1] as Record<string, unknown>;
+      expect(payload).not.toHaveProperty("clientTranscript");
+    });
+
+    it("skips the in-progress-job dedupe when a transcript is provided, creating a fresh job instead of reusing someone else's", async () => {
+      mockAuthenticated();
+      mockNotOptedOut();
+      // Cache miss, then an existing in-progress job for the same URL —
+      // ordinarily this would short-circuit with that job's ID (see the
+      // "existing in-progress job" tests above). With a transcript, that
+      // dedupe hit must never even be looked at.
+      mockExistingInProgressJob();
+      // mockExistingInProgressJob only wires the first two db.select calls
+      // (cache miss, dedupe hit) and doesn't set up credit claim/insert —
+      // provide those separately so the fresh-job path can complete.
+      vi.mocked(db.update).mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([{ credits: 2 }]),
+          }),
+        }),
+      } as any);
+      insertValuesMock = vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([{ id: "fresh-job-1" }]),
+      });
+      vi.mocked(db.insert).mockReturnValue({ values: insertValuesMock } as any);
+
+      const result = await submitTikTokUrl(VALID_URL, undefined, "a transcript");
+
+      expect(result).toHaveProperty("success", true);
+      const successResult = result as { success: true; jobId: string };
+      // Not "existing-job-1" — the dedupe hit that would otherwise apply.
+      expect(successResult.jobId).toBe("fresh-job-1");
+      expect(tasks.trigger).toHaveBeenCalled();
+    });
+
+    it("returns TEXT_TOO_LONG before claiming a credit when the transcript exceeds 50,000 characters", async () => {
+      mockAuthenticated();
+      mockNotOptedOut();
+      mockNewJobCreation();
+
+      const oversized = "a".repeat(50_001);
+      const result = await submitTikTokUrl(VALID_URL, undefined, oversized);
+
+      expect(result).toEqual({
+        error: {
+          code: "TEXT_TOO_LONG",
+          message: "This video is too long to process. Try a shorter video.",
+        },
+      });
+      // Rejected before the credit claim and before triggering any job —
+      // this is a coarse pre-check specifically to avoid a pointless
+      // claim -> trigger -> job -> fail -> refund round-trip for a failure
+      // that's knowable synchronously.
+      expect(db.update).not.toHaveBeenCalled();
+      expect(tasks.trigger).not.toHaveBeenCalled();
+    });
+  });
+});
+
+// ─── Anonymous path: oversized caption ─────────────────────────────────────
+
+/**
+ * `submitAnonymousUrl` already converted RecipeParseError into THIN_CAPTION, but
+ * its catch re-threw everything else — and parseRecipeFromText rethrows
+ * TextTooLongError untouched from its own catch, so it arrived unwrapped and
+ * escaped the action.
+ */
+describe("submitAnonymousUrl - oversized caption handling", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns a typed TEXT_TOO_LONG error instead of throwing", async () => {
+    const { submitAnonymousUrl } = await import("@/actions/extraction");
+
+    vi.mocked(auth.api.getSession).mockResolvedValue(null);
+
+    // Cache lookup: miss. .where().orderBy().limit()
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          orderBy: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      }),
+    } as never);
+
+    vi.mocked(fetchOembedMetadata).mockResolvedValue({
+      title: "a very long caption",
+      authorName: "Chef Mike",
+      authorUrl: "https://www.tiktok.com/@chef.mike",
+      thumbnailUrl: "https://example.com/thumb.jpg",
+    });
+
+    vi.mocked(parseRecipeFromText).mockRejectedValue(
+      new TextTooLongError(60_000)
+    );
+
+    const result = await submitAnonymousUrl(VALID_URL);
+
+    expect(result).toHaveProperty("error");
+    const { error } = result as { error: { code: string; message: string } };
+    expect(error.code).toBe("TEXT_TOO_LONG");
+    expect(error.message).toMatch(/too long/i);
   });
 });
 

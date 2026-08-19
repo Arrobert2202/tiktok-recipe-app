@@ -22,7 +22,11 @@ export type SubmitResult =
   | { success: true; recipe: Recipe }
   | { error: AppError };
 
-export async function submitTikTokUrl(url: string, language?: string): Promise<SubmitResult> {
+export async function submitTikTokUrl(
+  url: string,
+  language?: string,
+  clientTranscript?: string
+): Promise<SubmitResult> {
   // 1. Validate URL format
   if (!validateTikTokUrl(url)) {
     return {
@@ -152,24 +156,46 @@ export async function submitTikTokUrl(url: string, language?: string): Promise<S
     }
   }
 
-  // 8. Check for existing in-progress job for same canonical URL
-  const IN_PROGRESS_STATUSES = ["pending", "processing"];
-  const [existingJob] = await db
-    .select({ id: extractionJobs.id, status: extractionJobs.status })
-    .from(extractionJobs)
-    .where(
-      and(
-        eq(extractionJobs.canonicalUrl, canonicalUrl),
-        inArray(extractionJobs.status, IN_PROGRESS_STATUSES)
+  // 8. Check for existing in-progress job for same canonical URL. Skipped
+  // entirely when a transcript was uploaded: handing this submitter someone
+  // else's already-running plain-URL job would silently discard what they
+  // uploaded, with no error or indication — they specifically paid the
+  // upload step for a better result, so this always creates a fresh job.
+  if (!clientTranscript) {
+    const IN_PROGRESS_STATUSES = ["pending", "processing"];
+    const [existingJob] = await db
+      .select({ id: extractionJobs.id, status: extractionJobs.status })
+      .from(extractionJobs)
+      .where(
+        and(
+          eq(extractionJobs.canonicalUrl, canonicalUrl),
+          inArray(extractionJobs.status, IN_PROGRESS_STATUSES)
+        )
       )
-    )
-    .limit(1);
+      .limit(1);
 
-  if (existingJob) {
+    if (existingJob) {
+      return {
+        success: true,
+        jobId: existingJob.id,
+        status: existingJob.status as ExtractionStatus,
+      };
+    }
+  }
+
+  // 8a. A transcript this long is guaranteed to fail the parser's combined-
+  // length check (lib/recipe-parser.ts's MAX_INPUT_LENGTH, checked against
+  // caption + transcript together) regardless of what the caption turns out
+  // to be — catching it here, before the credit claim, avoids a pointless
+  // claim -> trigger -> job -> fail -> refund round-trip for a failure
+  // that's knowable synchronously. Not a duplicate of the parser's real
+  // check: this is a coarse pre-check on the transcript alone.
+  if (clientTranscript && clientTranscript.length > 50_000) {
     return {
-      success: true,
-      jobId: existingJob.id,
-      status: existingJob.status as ExtractionStatus,
+      error: createError(
+        "TEXT_TOO_LONG",
+        "This video is too long to process. Try a shorter video."
+      ),
     };
   }
 
@@ -221,6 +247,7 @@ export async function submitTikTokUrl(url: string, language?: string): Promise<S
     creatorProfileUrl: oembedMeta?.authorUrl ?? `https://www.tiktok.com/@${creatorHandle}`,
     thumbnailUrl: oembedMeta?.thumbnailUrl,
     language: normalizedLanguage,
+    ...(clientTranscript ? { clientTranscript } : {}),
   });
 
   // 14. Return the new job ID
@@ -442,177 +469,3 @@ export async function submitAnonymousUrl(
 }
 
 
-export type FusionSubmitResult =
-  | { success: true; recipe: { id: string; slug: string; title: string } }
-  | { error: AppError };
-
-export async function submitWithDataFusion(
-  url: string,
-  transcript?: string,
-  language?: string
-): Promise<FusionSubmitResult> {
-  // 1. Validate URL
-  if (!validateTikTokUrl(url)) {
-    return { error: createError("INVALID_URL", "Please enter a valid TikTok video URL") };
-  }
-
-  // 2. Auth check
-  const requestHeaders = await headers();
-  const session = await auth.api.getSession({ headers: requestHeaders });
-  if (!session) {
-    return { error: createError("UNAUTHORIZED", "You must be signed in") };
-  }
-
-  // 2a. Rate limit, ahead of any network call — see submitTikTokUrl for why
-  // this needs to run before the credit check rather than relying on it.
-  const { tryConsumeUserAction } = await import("@/lib/user-limit");
-  const withinLimit = await tryConsumeUserAction(session.user.id, "extraction_submit");
-  if (!withinLimit) {
-    return {
-      error: createError(
-        "RATE_LIMITED",
-        "Too many extraction attempts. Please wait a bit and try again."
-      ),
-    };
-  }
-
-  // 2b. Normalize before first use (parser call and, on a non-transcript
-  // result, the cache write below).
-  const normalizedLanguage = normalizeLanguageCode(language);
-
-  // 3. Canonicalize
-  let canonicalUrl: string;
-  try {
-    canonicalUrl = await canonicalizeTikTokUrl(url);
-  } catch {
-    return { error: createError("CANONICALIZATION_FAILED", "Could not resolve TikTok URL") };
-  }
-
-  // 4. Creator handle + opt-out check
-  const creatorHandle = extractCreatorHandle(canonicalUrl);
-  if (!creatorHandle) {
-    return { error: createError("CREATOR_NOT_RESOLVABLE", "Could not identify creator") };
-  }
-
-  const optedOut = await isCreatorOptedOut(creatorHandle);
-  if (optedOut) {
-    return { error: createError("CREATOR_OPTED_OUT", "This creator has opted out") };
-  }
-
-  // 5. Credit check (this costs money)
-  const { hasCredits: userHasCredits } = await import("@/lib/credits");
-  const hasCreditAvailable = await userHasCredits(session.user.id);
-  if (!hasCreditAvailable) {
-    return {
-      error: createError(
-        "INSUFFICIENT_CREDITS",
-        "You've used all your free recipes. Upgrade to Pro for unlimited extractions."
-      ),
-    };
-  }
-
-  // 6. Fetch oEmbed caption
-  const oembedMeta = await fetchOembedMetadata(canonicalUrl);
-  const captionText = oembedMeta?.title;
-
-  // 7. Parse with Data Fusion (caption + transcript)
-  //
-  // A parse failure is a normal outcome — some videos simply aren't recipes — so
-  // it has to leave as a typed error rather than an exception. Thrown, it reaches
-  // the caller as an opaque rejection: no `error.code` to branch on, nothing to
-  // say beyond "something went wrong", and a server-side fault logged for what is
-  // really a user-input problem.
-  //
-  // No credit is at stake either way — the decrement below only runs on success.
-  //
-  // The advice differs from the anonymous flow's THIN_CAPTION: this user already
-  // supplied a transcript, so telling them to sign in for audio transcription
-  // would be wrong.
-  const { parseRecipeFromText } = await import("@/lib/recipe-parser");
-
-  let parsed: RecipeOutput;
-  try {
-    parsed = await parseRecipeFromText({
-      captionText: captionText || undefined,
-      transcriptText: transcript || undefined,
-      language: normalizedLanguage,
-    });
-  } catch (error) {
-    if (error instanceof TextTooLongError) {
-      return {
-        error: createError(
-          "TEXT_TOO_LONG",
-          "This video is too long to process. Try a shorter video."
-        ),
-      };
-    }
-    if (error instanceof RecipeParseError) {
-      return {
-        error: createError(
-          "EXTRACTION_FAILED",
-          "We couldn't find a recognisable recipe in this video. Try a different one."
-        ),
-      };
-    }
-    throw error;
-  }
-
-  // 8. Create recipe record.
-  //
-  // A client-supplied transcript is arbitrary text from the browser, fed to
-  // the LLM and attributed to a real creator's name and profile. It is not
-  // published as public/cached content: `isPublic: false` keeps it off the
-  // public /r/[slug] share page (and out of the sitemap and OG image route,
-  // which both gate on the same flag), so an attacker-controlled transcript
-  // can't get indexed under someone else's name. The submitter can still see
-  // and save their own result via /recipe/[id], which has no such gate.
-  const slug = generateSlug();
-  const isClientTranscript = !!transcript;
-
-  const [recipe] = await db
-    .insert(recipes)
-    .values({
-      slug,
-      title: parsed.title,
-      ingredients: parsed.ingredients,
-      steps: parsed.steps,
-      tipsAndTricks: parsed.tipsAndTricks,
-      sourceUrl: canonicalUrl,
-      creatorHandle,
-      creatorDisplayName: oembedMeta?.authorName,
-      creatorProfileUrl: oembedMeta?.authorUrl ?? `https://www.tiktok.com/@${creatorHandle}`,
-      thumbnailUrl: oembedMeta?.thumbnailUrl,
-      extractionStrategy: isClientTranscript ? "data_fusion" : "oembed_caption",
-      extractionDurationMs: 0,
-      isPublic: !isClientTranscript,
-      // The submitter owns their result either way — including the private,
-      // client-transcript case, where isPublic already keeps it off the
-      // public page regardless of who can edit it.
-      ownerId: session.user.id,
-    })
-    .returning({ id: recipes.id, slug: recipes.slug, title: recipes.title });
-
-  // 9. Cache result — skipped for a client-supplied transcript. recipe_cache
-  // is global, so caching this would silently serve the same unverified
-  // content to every other user (including submitTikTokUrl's audio-
-  // transcribed result) who later requests this URL in the same language.
-  if (!isClientTranscript) {
-    await db
-      .insert(recipeCache)
-      .values({
-        canonicalUrl,
-        language: normalizedLanguage,
-        qualityTier: getQualityTierForStrategy("oembed_caption"),
-        recipeId: recipe.id,
-      })
-      .onConflictDoNothing();
-  }
-
-  // 10. Charge 1 credit after successful extraction. Uses the same atomic
-  // claim as submitTikTokUrl so the decrement itself can't race, even though
-  // the check-then-act gap between step 5 and here is unchanged for now.
-  const { claimCredit } = await import("@/lib/credits");
-  await claimCredit(session.user.id);
-
-  return { success: true, recipe: { id: recipe.id, slug: recipe.slug, title: recipe.title } };
-}

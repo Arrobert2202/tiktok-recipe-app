@@ -33,8 +33,6 @@ export type ExtractionStatus = "pending" | "processing" | "completed" | "failed"
 export type ExtractionStage =
   | "cache_lookup"
   | "oembed"
-  | "caption_parse"
-  | "native_captions"
   | "asr"
   | "llm_parse"
   | "complete";

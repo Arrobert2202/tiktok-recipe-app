@@ -4,7 +4,7 @@ import { Suspense, useState, useCallback, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ChefHat, ArrowRight } from "lucide-react";
-import { submitTikTokUrl, submitWithDataFusion, type SubmitResult } from "@/actions/extraction";
+import { submitTikTokUrl, type SubmitResult } from "@/actions/extraction";
 import { VideoDropzone } from "@/components/video-dropzone";
 import { PaywallModal } from "@/components/paywall-modal";
 import { useLanguage } from "@/lib/use-language";
@@ -14,13 +14,6 @@ const LOADING_STAGES = [
   { text: "Fetching video info...", icon: "🔍" },
   { text: "Transcribing audio...", icon: "🎙️" },
   { text: "Extracting recipe with AI...", icon: "🧠" },
-  { text: "Plating the dish...", icon: "🍽️" },
-];
-
-const LOADING_STAGES_WITH_TRANSCRIPT = [
-  { text: "Transcribing audio...", icon: "🎙️" },
-  { text: "Analyzing video caption...", icon: "🔍" },
-  { text: "Fusing data sources...", icon: "🧬" },
   { text: "Plating the dish...", icon: "🍽️" },
 ];
 
@@ -43,8 +36,6 @@ function HomePageInner() {
   const handleTranscriptReady = useCallback((text: string) => {
     setTranscript(text);
   }, []);
-
-  const stages = transcript ? LOADING_STAGES_WITH_TRANSCRIPT : LOADING_STAGES;
 
   const pollForCompletion = useCallback(
     (id: string) => {
@@ -91,61 +82,47 @@ function HomePageInner() {
       setIsLoading(true);
       setLoadingStage(0);
 
-      const activeStages = transcript
-        ? LOADING_STAGES_WITH_TRANSCRIPT
-        : LOADING_STAGES;
-
       // Animate through stages
       const stageInterval = setInterval(() => {
-        setLoadingStage((prev) => Math.min(prev + 1, activeStages.length - 1));
+        setLoadingStage((prev) => Math.min(prev + 1, LOADING_STAGES.length - 1));
       }, 2000);
 
       try {
-        if (transcript) {
-          // Data Fusion path: caption + transcript
-          const result = await submitWithDataFusion(trimmed, transcript, language);
-          clearInterval(stageInterval);
+        // One pipeline regardless of whether a video was uploaded — an
+        // uploaded transcript just rides along as an extra input the job
+        // uses instead of running its own audio extraction. A cache hit
+        // still resolves synchronously (`"recipe" in result`); otherwise
+        // this always polls a real job now, including the upload case,
+        // which used to resolve instantly by running inline instead of
+        // going through Trigger.dev.
+        const result: SubmitResult = await submitTikTokUrl(
+          trimmed,
+          language,
+          transcript ?? undefined
+        );
+        clearInterval(stageInterval);
 
-          if ("error" in result) {
-            if (result.error.code === "INSUFFICIENT_CREDITS") {
-              setShowPaywall(true);
-              setIsLoading(false);
-            } else {
-              setError(result.error.message);
-              setIsLoading(false);
-            }
-            return;
+        if ("error" in result) {
+          if (result.error.code === "INSUFFICIENT_CREDITS") {
+            setShowPaywall(true);
+            setIsLoading(false);
+          } else {
+            setError(result.error.message);
+            setIsLoading(false);
           }
-
-          // Not `/r/${slug}`: a data-fusion recipe built from a client-supplied
-          // transcript is saved with isPublic: false (see submitWithDataFusion),
-          // so the public share page would 404-equivalent it. /recipe/[id] has
-          // no such gate and is where the submitter views their own result.
-          router.push(`/recipe/${result.recipe.id}`);
-        } else {
-          // Original path: URL only
-          const result: SubmitResult = await submitTikTokUrl(trimmed, language);
-          clearInterval(stageInterval);
-
-          if ("error" in result) {
-            if (result.error.code === "INSUFFICIENT_CREDITS") {
-              setShowPaywall(true);
-              setIsLoading(false);
-            } else {
-              setError(result.error.message);
-              setIsLoading(false);
-            }
-            return;
-          }
-
-          if ("recipe" in result) {
-            router.push(`/r/${result.recipe.slug}`);
-            return;
-          }
-
-          // Job started - start polling
-          pollForCompletion(result.jobId);
+          return;
         }
+
+        if ("recipe" in result) {
+          router.push(`/r/${result.recipe.slug}`);
+          return;
+        }
+
+        // Job started - start polling. The completion handler already
+        // redirects to /recipe/[id], which has no isPublic gate — the
+        // right target whether or not this job's result ends up private
+        // (a client-supplied transcript keeps it off /r/[slug]).
+        pollForCompletion(result.jobId);
       } catch {
         clearInterval(stageInterval);
         setError("Something went wrong. Please try again.");
@@ -309,7 +286,7 @@ function HomePageInner() {
               className="backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl rounded-3xl p-10"
             >
               <div className="space-y-6">
-                {stages.map((stage, index) => (
+                {LOADING_STAGES.map((stage, index) => (
                   <motion.div
                     key={stage.text}
                     initial={{ opacity: 0, x: -20 }}
