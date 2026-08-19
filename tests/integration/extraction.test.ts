@@ -429,8 +429,7 @@ describe("submitTikTokUrl - extraction flow integration", () => {
       expect(result).toEqual({
         error: {
           code: "INSUFFICIENT_CREDITS",
-          message:
-            "You've used all your free recipes. Upgrade to Pro for unlimited extractions.",
+          message: "You've used all your credits. Buy more to keep extracting recipes.",
         },
       });
 

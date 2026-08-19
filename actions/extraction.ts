@@ -217,7 +217,7 @@ export async function submitTikTokUrl(
     return {
       error: createError(
         "INSUFFICIENT_CREDITS",
-        "You've used all your free recipes. Upgrade to Pro for unlimited extractions."
+        "You've used all your credits. Buy more to keep extracting recipes."
       ),
     };
   }

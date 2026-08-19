@@ -261,6 +261,39 @@ export const ipActionLimits = pgTable(
   ]
 );
 
+// ─── Credit Purchases ────────────────────────────────────────────────────────
+// One row per completed Stripe Checkout Session. Doubles as two things:
+// the webhook's idempotency ledger (unique stripeSessionId — Stripe
+// delivers webhooks at-least-once, so the same session can be processed
+// more than once) and the record needed to claw back credits on a refund
+// or chargeback (stripePaymentIntentId is how charge.refunded/
+// charge.dispute.created events, which don't carry a session id, get
+// joined back to a user). userId uses onDelete: "set null" like
+// recipes.ownerId, not cascade like most user-owned tables — deleting an
+// account shouldn't erase the only record a payment happened, since a
+// refund or dispute can still arrive after the account is gone.
+export const creditPurchases = pgTable(
+  "credit_purchases",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+    stripeSessionId: text("stripe_session_id").notNull().unique(),
+    stripePaymentIntentId: text("stripe_payment_intent_id"),
+    packId: varchar("pack_id", { length: 20 }).notNull(),
+    creditsAdded: integer("credits_added").notNull(),
+    amountCents: integer("amount_cents").notNull(),
+    // Set by the refund/dispute clawback handler; doubles as its one-shot
+    // guard (mirrors extractionJobs.creditRefunded) so a replayed
+    // charge.refunded/charge.dispute.created event can't claw back twice.
+    refundedAt: timestamp("refunded_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("idx_credit_purchases_user").on(table.userId),
+    index("idx_credit_purchases_payment_intent").on(table.stripePaymentIntentId),
+  ]
+);
+
 // ─── Creator Opt-Out ─────────────────────────────────────────────────────────
 // One row per handle is the whole state machine: no row = never requested,
 // verifiedAt null = a request is pending email confirmation, verifiedAt set

@@ -1,24 +1,52 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Crown, Sparkles } from "lucide-react";
+import { X, Check, Crown, Sparkles, Loader2 } from "lucide-react";
+import { createCheckoutSession } from "@/actions/billing";
+import { CREDIT_PACKS } from "@/lib/credit-packs";
 
 interface PaywallModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const PRO_FEATURES = [
-  "Unlimited recipe extractions",
+const FEATURES = [
+  "1 credit = 1 recipe extraction",
   "Full audio transcription (AI-powered)",
   "Tips & Tricks from chef audio",
-  "Priority processing speed",
-  "Cook Mode with wake-lock",
-  "Export recipes as PDF",
+  "Upload video for maximum accuracy",
+  "Credits never expire",
 ];
 
+function formatPrice(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+function pricePerCredit(pack: (typeof CREDIT_PACKS)[number]): string {
+  return `${(pack.priceCents / pack.credits / 100).toFixed(2)}/credit`;
+}
+
 export function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
+  const [isPending, startTransition] = useTransition();
+  const [pendingPackId, setPendingPackId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   if (!isOpen) return null;
+
+  function handleBuy(packId: string) {
+    setError(null);
+    setPendingPackId(packId);
+    startTransition(async () => {
+      const result = await createCheckoutSession(packId);
+      if (result.url) {
+        window.location.href = result.url;
+        return;
+      }
+      setError(result.error ?? "Something went wrong. Please try again.");
+      setPendingPackId(null);
+    });
+  }
 
   return (
     <AnimatePresence>
@@ -72,24 +100,59 @@ export function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
 
             {/* Headline */}
             <h2 className="text-2xl font-bold text-center text-white mb-2">
-              Upgrade to Pro
+              Buy credits
             </h2>
             <p className="text-center text-white/50 mb-8">
-              You&apos;ve used your free recipes. Unlock unlimited extractions.
+              You&apos;ve used your free credits. Grab a pack to keep extracting.
             </p>
 
-            {/* Price card */}
-            <div className="rounded-2xl border border-purple-500/30 bg-purple-500/5 p-6 mb-6">
-              <div className="flex items-baseline justify-center gap-1 mb-1">
-                <span className="text-4xl font-bold text-white">$2.99</span>
-                <span className="text-white/50">/month</span>
+            {error && (
+              <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-center text-sm text-red-400">
+                {error}
               </div>
-              <p className="text-center text-sm text-white/40">Cancel anytime</p>
+            )}
+
+            {/* Credit packs */}
+            <div className="space-y-3 mb-8">
+              {CREDIT_PACKS.map((pack, index) => {
+                const isBest = index === CREDIT_PACKS.length - 1;
+                const isThisPending = isPending && pendingPackId === pack.id;
+                return (
+                  <button
+                    key={pack.id}
+                    onClick={() => handleBuy(pack.id)}
+                    disabled={isPending}
+                    className={`w-full flex items-center justify-between rounded-2xl border p-4 text-left transition-all disabled:opacity-50 ${
+                      isBest
+                        ? "border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/15"
+                        : "border-white/10 bg-white/5 hover:bg-white/10"
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-white">{pack.label}</span>
+                        {isBest && (
+                          <span className="rounded-full bg-purple-500/20 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-purple-300">
+                            Best value
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-white/40">{pricePerCredit(pack)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-bold text-white">
+                        {formatPrice(pack.priceCents)}
+                      </span>
+                      {isThisPending && <Loader2 className="w-4 h-4 animate-spin text-white/50" />}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Features */}
             <ul className="space-y-3 mb-8">
-              {PRO_FEATURES.map((feature) => (
+              {FEATURES.map((feature) => (
                 <li key={feature} className="flex items-center gap-3">
                   <div className="flex items-center justify-center w-5 h-5 rounded-full bg-purple-500/20">
                     <Check className="w-3 h-3 text-purple-400" />
@@ -99,22 +162,10 @@ export function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
               ))}
             </ul>
 
-            {/* CTA Button */}
-            <button
-              onClick={() => {
-                // TODO: Integrate Stripe Checkout
-                alert("Stripe integration coming soon! For now, enjoy exploring the app.");
-                onClose();
-              }}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold py-4 px-8 rounded-2xl shadow-2xl shadow-purple-500/30 hover:from-purple-700 hover:to-pink-600 hover:shadow-purple-500/50 transition-all active:scale-[0.98]"
-            >
-              <Sparkles className="w-5 h-5" />
-              Subscribe with Stripe
-            </button>
-
             {/* Trust signals */}
-            <p className="text-center text-xs text-white/30 mt-4">
-              Secure payment via Stripe &middot; Cancel anytime &middot; Instant access
+            <p className="text-center text-xs text-white/30 flex items-center justify-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" />
+              Secure payment via Stripe &middot; No subscription &middot; Instant credit
             </p>
           </div>
         </motion.div>

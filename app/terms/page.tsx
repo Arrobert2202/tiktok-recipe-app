@@ -120,43 +120,39 @@ export default function TermsPage() {
             covers one recipe extraction.
           </li>
           <li>
-            Paid plans give you expanded access. Plan details and prices are
-            shown at the point of purchase and are what govern your
-            subscription.
+            Once your free credits run out, you can buy a credit pack.
+            Pack sizes and prices are shown at the point of purchase — these
+            are one-time purchases, not a recurring subscription.
           </li>
           <li>
             Payments are processed by Stripe. We never receive or store your
             card details. Stripe&apos;s terms apply to the payment itself.
           </li>
           <li>
-            Subscriptions renew automatically each month until you cancel. You
-            can cancel at any time and keep access until the end of the period
-            you&apos;ve already paid for.
+            Purchased credits don&apos;t expire and there&apos;s nothing to
+            cancel — you just buy more when you run out.
           </li>
           <li>
-            We don&apos;t refund partial months. If you cancel mid-cycle, your
-            plan simply runs to the end of that cycle and then stops.
+            Prices can change for future purchases, but never for a pack
+            you&apos;ve already bought.
           </li>
           <li>
-            Prices can change. We&apos;ll tell you before a change affects your
-            next renewal, and you can cancel if you don&apos;t want to continue.
-          </li>
-          <li>
-            If a payment fails, we may pause your paid access until the payment
-            goes through.
+            If a payment is later refunded or successfully disputed with your
+            bank, the credits it granted are deducted from your balance
+            (down to a minimum of zero, even if you&apos;ve already used
+            some of them).
           </li>
         </ul>
       </div>
 
       <h2 className="text-xl font-semibold text-white mt-10 mb-3">
-        5. Fair use of &quot;unlimited&quot; plans
+        5. Fair use of purchased credits
       </h2>
       <p className="text-white/70 leading-relaxed">
-        Where a plan is described as &quot;unlimited&quot;, it means unlimited
-        for normal personal cooking use. It is not a licence to run automated
-        extraction at scale. Every extraction costs us real money in AI
-        processing, so a plan priced for a home cook can&apos;t absorb the
-        workload of a data pipeline.
+        Credits are for your own personal cooking use. It is not a licence to
+        run automated extraction at scale or resell access. Every extraction
+        costs us real money in AI processing, so buying credits doesn&apos;t
+        entitle you to run a scraping or data pipeline against the service.
       </p>
       <p className="mt-3 text-white/70 leading-relaxed">
         If your usage is dramatically outside normal patterns, we may slow down
@@ -305,8 +301,8 @@ export default function TermsPage() {
         particularly for abuse, fraud, or automated extraction. Where it is
         reasonable to do so, we&apos;ll warn you first and give you a chance to
         fix the problem. We may also discontinue the service as a whole; if we
-        do, we&apos;ll give notice and refund any prepaid time you haven&apos;t
-        used.
+        do, we&apos;ll give notice and refund any purchased credits you
+        haven&apos;t used.
       </p>
 
       <h2 className="text-xl font-semibold text-white mt-10 mb-3">

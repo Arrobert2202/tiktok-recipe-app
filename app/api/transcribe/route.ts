@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   // double-charging.
   if (!(await hasCredits(session.user.id))) {
     return NextResponse.json(
-      { error: "You've used all your free recipes. Upgrade to Pro for unlimited extractions." },
+      { error: "You've used all your credits. Buy more to keep extracting recipes." },
       { status: 402 }
     );
   }

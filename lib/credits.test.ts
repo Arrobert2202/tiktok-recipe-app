@@ -19,7 +19,7 @@ vi.mock("@/db", () => ({
   },
 }));
 
-import { refundCredit, claimCredit, getUserCredits, hasCredits } from "./credits";
+import { addCredits, refundCredit, claimCredit, getUserCredits, hasCredits } from "./credits";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 
@@ -27,12 +27,15 @@ import { users } from "@/db/schema";
  * Flattens a drizzle `sql` template into a comparable string, e.g.
  * sql`${users.credits} + 1` becomes "credits + 1".
  *
- * Column chunks expose `.name`; literal chunks expose `.value` as a string array.
+ * Column chunks expose `.name`; literal template text exposes `.value` as a
+ * string array; an interpolated JS primitive (e.g. `${amount}`) appears as
+ * a bare number/string chunk rather than wrapped in an object at all.
  */
 function renderSqlExpression(expr: unknown): string {
   const chunks = (expr as { queryChunks?: unknown[] }).queryChunks ?? [];
   return chunks
     .map((chunk) => {
+      if (typeof chunk === "number" || typeof chunk === "string") return String(chunk);
       const c = chunk as { name?: string; value?: string[] };
       if (typeof c.name === "string") return c.name;
       if (Array.isArray(c.value)) return c.value.join("");
@@ -186,6 +189,34 @@ describe("refundCredit / claimCredit symmetry", () => {
     expect(refundExpr).toBe("credits + 1");
     // Same column, so a refund exactly undoes a decrement.
     expect(decrementExpr.replace(" - 1", "")).toBe(refundExpr.replace(" + 1", ""));
+  });
+});
+
+describe("addCredits", () => {
+  it("adds the given amount and returns the new count", async () => {
+    const { setMock } = mockUsersUpdate(35);
+
+    const result = await addCredits("user-1", 25);
+
+    expect(result).toBe(35);
+    expect(db.update).toHaveBeenCalledWith(users);
+
+    const setPayload = setMock.mock.calls[0][0];
+    expect(renderSqlExpression(setPayload.credits)).toBe("credits + 25");
+  });
+
+  it("computes the new balance DB-side, not by reading then writing", async () => {
+    mockUsersUpdate(35);
+
+    await addCredits("user-1", 25);
+
+    expect(db.select).not.toHaveBeenCalled();
+  });
+
+  it("returns 0 when the user row does not exist", async () => {
+    mockUsersUpdateReturningNothing();
+
+    await expect(addCredits("ghost-user", 10)).resolves.toBe(0);
   });
 });
 
