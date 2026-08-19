@@ -149,6 +149,16 @@ export const extractionJobs = pgTable(
     // winner; only that caller issues the refund.
     creditRefunded: boolean("credit_refunded").notNull().default(false),
     triggerJobId: text("trigger_job_id"),
+    // Cost tracking (lib/openai-pricing.ts). Null until the job reaches a
+    // terminal state with usage data available — a job that fails before
+    // calling OpenAI never populates these. Raw usage (tokens, audio
+    // seconds) is kept alongside the derived cost rather than only the
+    // total, so the total can be audited or recomputed if the pricing
+    // constants turn out to have been wrong, without re-running the job.
+    promptTokens: integer("prompt_tokens"),
+    completionTokens: integer("completion_tokens"),
+    audioSeconds: integer("audio_seconds"),
+    costMicros: integer("cost_micros"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

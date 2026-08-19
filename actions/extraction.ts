@@ -404,7 +404,7 @@ export async function submitAnonymousUrl(
 
   let parsed: RecipeOutput;
   try {
-    parsed = await parseRecipeFromText({ captionText, language: normalizedLanguage });
+    ({ recipe: parsed } = await parseRecipeFromText({ captionText, language: normalizedLanguage }));
   } catch (error) {
     // `parseRecipeFromText` throws this above 50,000 characters, and rethrows it
     // untouched from its own catch — so it arrives here as itself rather than

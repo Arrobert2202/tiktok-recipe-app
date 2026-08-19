@@ -38,10 +38,11 @@ describe("parseRecipeFromText", () => {
         ingredients: [{ name: "flour", quantity: "2", unit: "cups" }],
         steps: ["Mix ingredients"],
       },
+      usage: { inputTokens: 100, outputTokens: 50 },
     } as any);
 
     const result = await parseRecipeFromText(exactText);
-    expect(result.title).toBe("Test Recipe");
+    expect(result.recipe.title).toBe("Test Recipe");
     expect(mockedGenerateObject).toHaveBeenCalledTimes(1);
   });
 
@@ -56,12 +57,13 @@ describe("parseRecipeFromText", () => {
         ],
         steps: ["Boil pasta", "Sauté garlic in olive oil", "Toss together"],
       },
+      usage: { inputTokens: 120, outputTokens: 60 },
     } as any);
 
     const result = await parseRecipeFromText("ok so you need pasta and garlic...");
-    expect(result.title).toBe("Garlic Pasta");
-    expect(result.ingredients).toHaveLength(3);
-    expect(result.steps).toHaveLength(3);
+    expect(result.recipe.title).toBe("Garlic Pasta");
+    expect(result.recipe.ingredients).toHaveLength(3);
+    expect(result.recipe.steps).toHaveLength(3);
   });
 
   it("throws RecipeParseError when generateObject fails", async () => {
@@ -82,6 +84,7 @@ describe("parseRecipeFromText", () => {
         ingredients: [{ name: "sugar" }],
         steps: ["Add sugar"],
       },
+      usage: { inputTokens: 80, outputTokens: 30 },
     } as any);
 
     await parseRecipeFromText("add a cup of sugar yall");
@@ -100,6 +103,7 @@ describe("parseRecipeFromText", () => {
         ingredients: [{ name: "item" }],
         steps: ["Step 1"],
       },
+      usage: { inputTokens: 80, outputTokens: 30 },
     } as any);
 
     await parseRecipeFromText("some recipe text");

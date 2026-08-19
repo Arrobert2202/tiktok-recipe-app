@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     }
 
     // Transcribe with Whisper
-    const transcript = await transcribeAudio(file, file.name);
+    const { text: transcript } = await transcribeAudio(file, file.name);
 
     return NextResponse.json({ transcript });
   } catch (error) {

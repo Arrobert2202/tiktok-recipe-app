@@ -100,7 +100,10 @@ describe("POST /api/transcribe", () => {
 
   it("transcribes a valid file once auth, credits, and rate limit all pass", async () => {
     mockAuthenticated();
-    vi.mocked(transcribeAudio).mockResolvedValue("seared steak, rested ten minutes");
+    vi.mocked(transcribeAudio).mockResolvedValue({
+      text: "seared steak, rested ten minutes",
+      durationSeconds: 42,
+    });
     const file = new File([new Uint8Array(1024)], "clip.mp4", { type: "video/mp4" });
 
     const res = await POST(requestWithFile(file));

@@ -35,9 +35,10 @@ describe("Property: Parser Output Structural Validity", () => {
       fc.asyncProperty(validRecipe, async (recipe) => {
         mockedGenerateObject.mockResolvedValue({
           object: recipe,
+          usage: { inputTokens: 100, outputTokens: 50 },
         } as any);
 
-        const result = await parseRecipeFromText("some transcript text");
+        const { recipe: result } = await parseRecipeFromText("some transcript text");
 
         // Title: 1-200 characters
         expect(result.title.length).toBeGreaterThanOrEqual(1);
@@ -64,9 +65,10 @@ describe("Property: Parser Output Structural Validity", () => {
       fc.asyncProperty(validRecipe, async (recipe) => {
         mockedGenerateObject.mockResolvedValue({
           object: recipe,
+          usage: { inputTokens: 100, outputTokens: 50 },
         } as any);
 
-        const result = await parseRecipeFromText("some transcript text");
+        const { recipe: result } = await parseRecipeFromText("some transcript text");
 
         // Validate against the Zod schema directly
         const parseResult = recipeSchema.safeParse(result);

@@ -7,6 +7,12 @@ import type { z } from "zod";
 
 export type RecipeOutput = z.infer<typeof recipeSchema>;
 
+export interface RecipeParseResult {
+  recipe: RecipeOutput;
+  /** For cost tracking (lib/openai-pricing.ts) — undefined if the provider didn't report it. */
+  usage: { promptTokens?: number; completionTokens?: number };
+}
+
 const MAX_INPUT_LENGTH = 50_000;
 
 interface ParseRecipeInput {
@@ -20,7 +26,9 @@ interface ParseRecipeInput {
  * Accepts caption text (from oEmbed) and/or transcript text (from Whisper).
  * Feeds both to the LLM for maximum extraction accuracy.
  */
-export async function parseRecipeFromText(textOrInput: string | ParseRecipeInput): Promise<RecipeOutput> {
+export async function parseRecipeFromText(
+  textOrInput: string | ParseRecipeInput
+): Promise<RecipeParseResult> {
   // Support legacy single-string input
   let captionText: string | undefined;
   let transcriptText: string | undefined;
@@ -62,7 +70,7 @@ export async function parseRecipeFromText(textOrInput: string | ParseRecipeInput
   }
 
   try {
-    const { object } = await generateObject({
+    const { object, usage } = await generateObject({
       model: openai("gpt-4o-mini"),
       schema: recipeSchema,
       prompt: `You are an expert culinary AI specializing in extracting structured recipes from TikTok videos.
@@ -83,7 +91,10 @@ For informal language (slang, "eyeball it", "a good amount"), interpret as best 
 ${sourceContent}`,
     });
 
-    return object;
+    return {
+      recipe: object,
+      usage: { promptTokens: usage.inputTokens, completionTokens: usage.outputTokens },
+    };
   } catch (error) {
     if (error instanceof TextTooLongError) {
       throw error;

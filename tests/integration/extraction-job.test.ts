@@ -84,13 +84,19 @@ function mockHappyPath() {
     buffer: Buffer.from("audio"),
     filename: "clip.m4a",
   });
-  vi.mocked(transcribeAudio).mockResolvedValue("server-transcribed audio text");
+  vi.mocked(transcribeAudio).mockResolvedValue({
+    text: "server-transcribed audio text",
+    durationSeconds: 90,
+  });
 
   vi.mocked(parseRecipeFromText).mockResolvedValue({
-    title: "Seared Steak",
-    ingredients: [{ name: "steak", quantity: "1", unit: "" }],
-    steps: ["Sear it", "Rest it"],
-    tipsAndTricks: [],
+    recipe: {
+      title: "Seared Steak",
+      ingredients: [{ name: "steak", quantity: "1", unit: "" }],
+      steps: ["Sear it", "Rest it"],
+      tipsAndTricks: [],
+    },
+    usage: { promptTokens: 150, completionTokens: 80 },
   });
 
   vi.mocked(db.update).mockReturnValue({
@@ -168,6 +174,50 @@ describe("extractionJob - clientTranscript branch", () => {
     expect(recipeInsert?.payload).toMatchObject({ isPublic: true, extractionStrategy: "data_fusion" });
 
     expect(inserts.find((c) => c.table === recipeCache)).toBeDefined();
+  });
+});
+
+describe("extractionJob - cost tracking", () => {
+  /** Captures the extraction_jobs update payloads (status changes, completion). */
+  function mockJobUpdateCapture() {
+    const jobUpdates: Array<Record<string, unknown>> = [];
+    vi.mocked(db.update).mockImplementation(((table: unknown) => ({
+      set: vi.fn().mockImplementation((payload: Record<string, unknown>) => {
+        if (table === extractionJobs) jobUpdates.push(payload);
+        return { where: vi.fn().mockResolvedValue(undefined) };
+      }),
+    })) as never);
+    return jobUpdates;
+  }
+
+  it("persists prompt/completion tokens and audio seconds on completion", async () => {
+    mockHappyPath();
+    mockInsertCapture();
+    const jobUpdates = mockJobUpdateCapture();
+
+    await run(BASE_PAYLOAD);
+
+    const completion = jobUpdates.find((u) => u.status === "completed");
+    expect(completion).toMatchObject({
+      promptTokens: 150,
+      completionTokens: 80,
+      audioSeconds: 90,
+    });
+    expect(typeof completion?.costMicros).toBe("number");
+    expect(completion?.costMicros).toBeGreaterThan(0);
+  });
+
+  it("leaves audioSeconds unset for a client-supplied transcript, since Whisper was never called for it", async () => {
+    mockHappyPath();
+    mockInsertCapture();
+    const jobUpdates = mockJobUpdateCapture();
+
+    await run({ ...BASE_PAYLOAD, clientTranscript: "client-uploaded transcript" });
+
+    const completion = jobUpdates.find((u) => u.status === "completed");
+    expect(completion?.audioSeconds).toBeUndefined();
+    // Still has a nonzero cost from the LLM parse call itself.
+    expect(completion?.costMicros).toBeGreaterThan(0);
   });
 });
 

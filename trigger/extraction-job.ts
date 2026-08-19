@@ -9,6 +9,7 @@ import { refundCredit } from "@/lib/credits";
 import { getQualityTierForStrategy } from "@/lib/quality-tier";
 import { normalizeLanguageCode } from "@/lib/languages";
 import { TextTooLongError, RecipeParseError } from "@/lib/errors";
+import { estimateCostMicros } from "@/lib/openai-pricing";
 import type { StrategyAttempt } from "@/lib/types";
 
 /**
@@ -113,6 +114,10 @@ export const extractionJob = task({
       // transcription via yt-dlp + Whisper.
       await updateJobStatus(jobId, "processing", "asr");
       let transcriptText: string | undefined;
+      // Only ever set for server-side transcription — a client-supplied
+      // transcript was billed on whatever device recorded it, not to us, so
+      // it contributes nothing to this job's own OpenAI cost.
+      let audioSeconds: number | undefined;
       const asrStart = Date.now();
 
       if (isClientTranscript) {
@@ -125,7 +130,9 @@ export const extractionJob = task({
 
           const { buffer, filename } = await extractAudioFromUrl(canonicalUrl);
           const audioBlob = new Blob([new Uint8Array(buffer)], { type: "audio/m4a" });
-          transcriptText = await transcribeAudio(audioBlob, filename);
+          const transcription = await transcribeAudio(audioBlob, filename);
+          transcriptText = transcription.text;
+          audioSeconds = transcription.durationSeconds;
 
           attempts.push({
             strategy: "asr",
@@ -154,10 +161,15 @@ export const extractionJob = task({
 
       // Step 3: Parse with Data Fusion LLM
       await updateJobStatus(jobId, "processing", "llm_parse");
-      const parsed = await parseRecipeFromText({
+      const { recipe: parsed, usage } = await parseRecipeFromText({
         captionText,
         transcriptText,
         language: payload.language,
+      });
+      const costMicros = estimateCostMicros({
+        promptTokens: usage.promptTokens,
+        completionTokens: usage.completionTokens,
+        audioSeconds,
       });
 
       // Step 4: Create recipe record
@@ -222,6 +234,10 @@ export const extractionJob = task({
           currentStage: "complete",
           strategiesAttempted: attempts,
           resultRecipeId: recipe.id,
+          promptTokens: usage.promptTokens,
+          completionTokens: usage.completionTokens,
+          audioSeconds,
+          costMicros,
           updatedAt: new Date(),
         })
         .where(eq(extractionJobs.id, jobId));
