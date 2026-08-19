@@ -8,6 +8,13 @@
       "when": 1785087359877,
       "tag": "0000_sudden_shadowcat",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787127363741,
+      "tag": "0001_wild_cloak",
+      "breakpoints": true
     }
   ]
 }
