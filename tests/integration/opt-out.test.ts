@@ -23,6 +23,20 @@ vi.mock("@/lib/opt-out-cache", () => ({
   invalidateOptOutCache: vi.fn(),
 }));
 
+// The real submitOptOutRequest/reverseOptOut now rate-limit by IP (reads
+// request headers) and send a real verification email on success — neither
+// of which this file's plain validation-focused tests care about, so both
+// are stubbed to their permissive/no-op defaults. See
+// tests/integration/creator.test.ts for the rate-limiting, hijack-
+// prevention, and email-matching behavior these mocks bypass here.
+vi.mock("next/headers", () => ({
+  headers: vi.fn().mockResolvedValue(new Headers()),
+}));
+
+vi.mock("@/lib/email", () => ({
+  sendCreatorVerificationEmail: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { submitOptOutRequest, reverseOptOut } from "@/actions/creator";
 import { invalidateOptOutCache } from "@/lib/opt-out-cache";
 

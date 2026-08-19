@@ -51,7 +51,7 @@ export default function CreatorPortalPage() {
       setFormState({
         status: "success",
         message:
-          "Your opt-out request has been submitted. Changes will take effect within 24 hours.",
+          "Check your email for a confirmation link — the request doesn't take effect until you click it. Changes take effect within 24 hours after that. The link expires in 7 days.",
       });
       setHandle("");
       setEmail("");
@@ -75,7 +75,7 @@ export default function CreatorPortalPage() {
       setFormState({
         status: "success",
         message:
-          "Your opt-out has been reversed. Your recipes will be publicly available again within 24 hours.",
+          "If that handle has an active opt-out under this email, we've sent a confirmation link — the reversal doesn't take effect until you click it. The link expires in 7 days.",
       });
       setHandle("");
       setEmail("");
@@ -119,13 +119,22 @@ export default function CreatorPortalPage() {
                 1
               </span>
               <span>
-                New recipe extractions from your videos will be blocked. Users
-                will see a notice that you&apos;ve opted out.
+                We&apos;ll email you a confirmation link. Nothing changes until
+                you click it — this proves the request actually came from you.
               </span>
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-medium text-white">
                 2
+              </span>
+              <span>
+                Once confirmed, new recipe extractions from your videos will be
+                blocked. Users will see a notice that you&apos;ve opted out.
+              </span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-medium text-white">
+                3
               </span>
               <span>
                 Existing recipes from your videos will be removed from public
@@ -134,7 +143,7 @@ export default function CreatorPortalPage() {
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-medium text-white">
-                3
+                4
               </span>
               <span>
                 Users who previously saved your recipes will keep them in their
@@ -144,11 +153,12 @@ export default function CreatorPortalPage() {
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-medium text-white">
-                4
+                5
               </span>
               <span>
-                You can reverse your decision at any time, and public access
-                will be restored within 24 hours.
+                You can reverse your decision at any time (same email
+                confirmation step), and public access will be restored within
+                24 hours.
               </span>
             </li>
           </ul>

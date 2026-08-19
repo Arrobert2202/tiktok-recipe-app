@@ -227,7 +227,37 @@ export const userActionLimits = pgTable(
   ]
 );
 
+// ─── IP Action Rate Limits ────────────────────────────────────────────────────
+// Mirrors user_action_limits' shape (count-in-window, one row per attempt)
+// but keyed on a hashed IP rather than a userId, for actions unauthenticated
+// callers can trigger — currently just the creator opt-out portal, which
+// sends real email and shouldn't be a free spam vector. Deliberately not
+// anonymous_extractions: that table specifically tracks the free-extraction
+// allowance, a different concern with its own semantics.
+export const ipActionLimits = pgTable(
+  "ip_action_limits",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ipHash: text("ip_hash").notNull(),
+    action: varchar("action", { length: 30 }).notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("idx_ip_action_limits_lookup").on(
+      table.ipHash,
+      table.action,
+      table.createdAt
+    ),
+  ]
+);
+
 // ─── Creator Opt-Out ─────────────────────────────────────────────────────────
+// One row per handle is the whole state machine: no row = never requested,
+// verifiedAt null = a request is pending email confirmation, verifiedAt set
+// + reversedAt null = actively opted out, both set = opted out then
+// reversed. The pending* columns hold whichever confirmation (opt-out or
+// reversal) is currently in flight — only one can be pending at a time,
+// since confirming or resubmitting always clears them first.
 export const creatorOptOuts = pgTable(
   "creator_opt_outs",
   {
@@ -237,7 +267,23 @@ export const creatorOptOuts = pgTable(
     verifiedAt: timestamp("verified_at"),
     optedOutAt: timestamp("opted_out_at").notNull().defaultNow(),
     reversedAt: timestamp("reversed_at"),
+    // Set while a submitted request awaits the creator clicking the email
+    // link that actually confirms it. Cleared (all three together) the
+    // moment a token is claimed, successfully or not, so a stale token can
+    // never be replayed.
+    pendingToken: text("pending_token"),
+    pendingAction: varchar("pending_action", { length: 10 }),
+    pendingTokenExpiresAt: timestamp("pending_token_expires_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    // Bumped on every confirmed opt-out/reversal (not on a bare request) —
+    // lib/opt-out-cache.ts polls this on a short interval to detect changes
+    // made by other server instances without waiting out the full 5-minute
+    // cache TTL.
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
-  (table) => [index("idx_optout_handle").on(table.handle)]
+  (table) => [
+    index("idx_optout_handle").on(table.handle),
+    index("idx_optout_pending_token").on(table.pendingToken),
+    index("idx_optout_updated_at").on(table.updatedAt),
+  ]
 );
