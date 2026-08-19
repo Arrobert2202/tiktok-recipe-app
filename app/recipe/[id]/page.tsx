@@ -37,9 +37,13 @@ export default async function RecipePage({ params }: RecipePageProps) {
   const steps = recipe.steps as string[];
   const tipsAndTricks = (recipe.tipsAndTricks as string[] | null) ?? [];
 
-  // Editing is scoped to recipes the viewer has saved, matching the ownership
-  // check in `updateRecipe`. Tags live on the cookbook entry, so the same
-  // lookup supplies the modal's initial tag list.
+  // Editing is scoped to the recipe's owner, matching the ownership check in
+  // `updateRecipe` — not to having saved it, since `recipes` is a single
+  // shared row and anyone who saved it can view/tag it without being able
+  // to rewrite content that other savers and the public /r/[slug] page also
+  // read. Tags live on the cookbook entry regardless of ownership, so the
+  // cookbook lookup still runs for anyone signed in, just to supply the
+  // modal's initial tag list.
   const session = await auth.api.getSession({ headers: await headers() });
 
   const [entry] = session
@@ -54,7 +58,7 @@ export default async function RecipePage({ params }: RecipePageProps) {
         )
     : [];
 
-  const canEdit = !!entry;
+  const canEdit = !!session && recipe.ownerId === session.user.id;
 
   return (
     <RecipePageClient

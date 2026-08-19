@@ -143,10 +143,12 @@ function mockCacheHit() {
     updatedAt: new Date("2024-01-01"),
   };
 
-  // First call: recipe cache lookup
+  // First call: recipe cache lookup — .where().orderBy().limit()
   const mockCacheFrom = vi.fn().mockReturnValue({
     where: vi.fn().mockReturnValue({
-      limit: vi.fn().mockResolvedValue([{ recipeId: "recipe-1" }]),
+      orderBy: vi.fn().mockReturnValue({
+        limit: vi.fn().mockResolvedValue([{ recipeId: "recipe-1" }]),
+      }),
     }),
   });
 
@@ -182,7 +184,8 @@ function mockNoExistingJob() {
 function mockExistingInProgressJob() {
   let callCount = 0;
 
-  // First call: cache miss, second call: existing job found
+  // First call: cache miss (.where().orderBy().limit()), second call:
+  // existing job found (.where().limit())
   vi.mocked(db.select).mockImplementation(() => {
     callCount++;
     if (callCount === 1) {
@@ -190,7 +193,9 @@ function mockExistingInProgressJob() {
       return {
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue([]),
+            orderBy: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([]),
+            }),
           }),
         }),
       } as any;
@@ -225,10 +230,16 @@ let insertValuesMock: ReturnType<typeof vi.fn>;
  * credits > 0) matching no rows, the same as a real database.
  */
 function mockNewJobCreation({ credits = 3 }: { credits?: number } = {}) {
+  // Shared across both select calls: the cache lookup chains .orderBy()
+  // before .limit(), the job-dedupe lookup goes straight to .limit() — this
+  // stub exposes both so the same mock works for either shape.
   vi.mocked(db.select).mockReturnValue({
     from: vi.fn().mockReturnValue({
       where: vi.fn().mockReturnValue({
         limit: vi.fn().mockResolvedValue([]),
+        orderBy: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([]),
+        }),
       }),
     }),
   } as any);

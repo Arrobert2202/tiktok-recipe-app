@@ -6,6 +6,8 @@ import { extractionJobs, recipes, recipeCache } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { generateSlug } from "@/lib/slug";
 import { refundCredit } from "@/lib/credits";
+import { getQualityTierForStrategy } from "@/lib/quality-tier";
+import { normalizeLanguageCode } from "@/lib/languages";
 import type { StrategyAttempt } from "@/lib/types";
 
 /**
@@ -163,13 +165,23 @@ export const extractionJob = task({
           thumbnailUrl: payload.thumbnailUrl,
           extractionStrategy: strategy,
           extractionDurationMs: totalDurationMs,
+          ownerId: payload.userId,
         })
         .returning();
 
-      // Step 5: Cache the result
+      // Step 5: Cache the result. `normalizeLanguageCode` re-runs here
+      // rather than trusting `payload.language` as already-normalized —
+      // submitTikTokUrl does normalize before triggering, but this job is
+      // the one place that actually writes the cache row, so it shouldn't
+      // depend on every future caller remembering to normalize upstream.
       await db
         .insert(recipeCache)
-        .values({ canonicalUrl, recipeId: recipe.id })
+        .values({
+          canonicalUrl,
+          language: normalizeLanguageCode(payload.language),
+          qualityTier: getQualityTierForStrategy(strategy),
+          recipeId: recipe.id,
+        })
         .onConflictDoNothing();
 
       // Step 6: Mark job complete

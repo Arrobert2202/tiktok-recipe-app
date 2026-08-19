@@ -85,6 +85,12 @@ export const recipes = pgTable(
     extractionStrategy: varchar("extraction_strategy", { length: 20 }).notNull(),
     extractionDurationMs: integer("extraction_duration_ms").notNull(),
     isPublic: boolean("is_public").notNull().default(true),
+    // Who may edit this row. Nullable: anonymous extractions have no
+    // signed-in user, and ON DELETE SET NULL (not cascade) means deleting
+    // the owning account doesn't destroy content other users have cached
+    // or saved to their own cookbook — it just becomes uneditable until
+    // reclaimed, rather than disappearing out from under them.
+    ownerId: text("owner_id").references(() => users.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -154,13 +160,34 @@ export const extractionJobs = pgTable(
 );
 
 // ─── Recipe Cache ────────────────────────────────────────────────────────────
-export const recipeCache = pgTable("recipe_cache", {
-  canonicalUrl: text("canonical_url").primaryKey(),
-  recipeId: uuid("recipe_id")
-    .notNull()
-    .references(() => recipes.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+// Keyed on (canonical_url, language, quality_tier) rather than canonical_url
+// alone, so a thin caption-only extraction can't permanently shadow a richer
+// one for the same URL — see lib/quality-tier.ts for what "quality" means
+// here. `language`/`qualityTier` default to the values that describe every
+// row this table held before this column existed ("en", caption-tier), so
+// adding them needs no manual backfill for old rows — but every future
+// insert must set both explicitly; the defaults exist for migration safety,
+// not as something calling code should rely on.
+export const recipeCache = pgTable(
+  "recipe_cache",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    canonicalUrl: text("canonical_url").notNull(),
+    language: varchar("language", { length: 8 }).notNull().default("en"),
+    qualityTier: integer("quality_tier").notNull().default(0),
+    recipeId: uuid("recipe_id")
+      .notNull()
+      .references(() => recipes.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("idx_recipe_cache_lookup").on(
+      table.canonicalUrl,
+      table.language,
+      table.qualityTier
+    ),
+  ]
+);
 
 // ─── Anonymous Extractions (rate limiting) ───────────────────────────────────
 // Tracks anonymous "try one free" extractions for abuse prevention.

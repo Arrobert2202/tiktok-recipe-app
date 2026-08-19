@@ -15,6 +15,13 @@
       "when": 1787127363741,
       "tag": "0001_wild_cloak",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787131509449,
+      "tag": "0002_first_ezekiel",
+      "breakpoints": true
     }
   ]
 }

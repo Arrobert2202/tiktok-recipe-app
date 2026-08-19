@@ -48,27 +48,12 @@ export async function updateRecipe(
     };
   }
 
-  // Verify user has this recipe in their cookbook (ownership check)
-  const [entry] = await db
-    .select({ id: cookbookEntries.id })
-    .from(cookbookEntries)
-    .where(
-      and(
-        eq(cookbookEntries.userId, session.user.id),
-        eq(cookbookEntries.recipeId, recipeId)
-      )
-    );
-
-  if (!entry) {
-    return {
-      error: createError(
-        "NOT_FOUND",
-        "Recipe not found in your cookbook"
-      ),
-    };
-  }
-
-  // Persist changes
+  // Ownership check. `recipes` has no per-user copies — this is the single
+  // shared row `/r/[slug]` and every saver's cookbook read from, so editing
+  // it has to be restricted to whoever actually owns it, not just anyone
+  // who saved it. A `NULL` owner (anonymous-path recipes, or ones from
+  // before this column existed and couldn't be backfilled) rejects
+  // everyone rather than defaulting open.
   const [updated] = await db
     .update(recipes)
     .set({
@@ -77,7 +62,7 @@ export async function updateRecipe(
       steps: data.steps,
       updatedAt: new Date(),
     })
-    .where(eq(recipes.id, recipeId))
+    .where(and(eq(recipes.id, recipeId), eq(recipes.ownerId, session.user.id)))
     .returning({
       id: recipes.id,
       title: recipes.title,

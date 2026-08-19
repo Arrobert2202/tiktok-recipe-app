@@ -302,11 +302,13 @@ describe("submitAnonymousUrl - oversized caption handling", () => {
 
     vi.mocked(auth.api.getSession).mockResolvedValue(null);
 
-    // Cache lookup: miss.
+    // Cache lookup: miss. .where().orderBy().limit()
     vi.mocked(db.select).mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue([]),
+          orderBy: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([]),
+          }),
         }),
       }),
     } as never);

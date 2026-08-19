@@ -4,13 +4,15 @@ import { headers } from "next/headers";
 import { tasks } from "@trigger.dev/sdk/v3";
 import { db } from "@/db";
 import { extractionJobs, recipeCache, recipes } from "@/db/schema";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, gte, desc } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { validateTikTokUrl, canonicalizeTikTokUrl, extractCreatorHandle } from "@/lib/url";
 import { isCreatorOptedOut } from "@/lib/opt-out-cache";
 import { fetchOembedMetadata } from "@/trigger/strategies/oembed";
 import { generateSlug } from "@/lib/slug";
 import { createError, RecipeParseError, TextTooLongError } from "@/lib/errors";
+import { normalizeLanguageCode } from "@/lib/languages";
+import { getQualityTierForStrategy, QUALITY_TIER_CAPTION, QUALITY_TIER_FULL } from "@/lib/quality-tier";
 import type { AppError } from "@/lib/errors";
 import type { RecipeOutput } from "@/lib/recipe-parser";
 import type { Recipe, ExtractionStatus } from "@/lib/types";
@@ -59,6 +61,12 @@ export async function submitTikTokUrl(url: string, language?: string): Promise<S
     };
   }
 
+  // 3b. Normalize before the value is used anywhere — both the cache lookup
+  // below and the parser call inside the trigger job need the same
+  // canonical value, or equivalent-but-differently-formatted language
+  // strings would fragment the cache.
+  const normalizedLanguage = normalizeLanguageCode(language);
+
   // 4. Canonicalize the URL
   let canonicalUrl: string;
   try {
@@ -94,13 +102,23 @@ export async function submitTikTokUrl(url: string, language?: string): Promise<S
     };
   }
 
-  // 7. Check recipe cache in DB (by canonical URL)
+  // 7. Check recipe cache in DB. This is the paid, full-quality path, so a
+  // cache entry only counts as a hit if it's already at full tier — a
+  // caption-only entry (e.g. from an anonymous extraction of the same URL)
+  // does not satisfy it, and falls through to a fresh extraction instead.
   const [cached] = await db
     .select({
       recipeId: recipeCache.recipeId,
     })
     .from(recipeCache)
-    .where(eq(recipeCache.canonicalUrl, canonicalUrl))
+    .where(
+      and(
+        eq(recipeCache.canonicalUrl, canonicalUrl),
+        eq(recipeCache.language, normalizedLanguage),
+        gte(recipeCache.qualityTier, QUALITY_TIER_FULL)
+      )
+    )
+    .orderBy(desc(recipeCache.qualityTier))
     .limit(1);
 
   if (cached) {
@@ -202,7 +220,7 @@ export async function submitTikTokUrl(url: string, language?: string): Promise<S
     creatorDisplayName: oembedMeta?.authorName,
     creatorProfileUrl: oembedMeta?.authorUrl ?? `https://www.tiktok.com/@${creatorHandle}`,
     thumbnailUrl: oembedMeta?.thumbnailUrl,
-    language,
+    language: normalizedLanguage,
   });
 
   // 14. Return the new job ID
@@ -265,6 +283,9 @@ export async function submitAnonymousUrl(
     };
   }
 
+  // 2a. Normalize before first use (cache lookup and parser call below).
+  const normalizedLanguage = normalizeLanguageCode(language);
+
   // 3. Resolve + hash the client IP (raw IP is never stored)
   const {
     hashIp,
@@ -297,11 +318,22 @@ export async function submitAnonymousUrl(
     };
   }
 
-  // 7. Cache check — free, and does not count against the rate limit
+  // 7. Cache check — free, and does not count against the rate limit. This
+  // path only ever produces caption-tier results itself, so any cached tier
+  // satisfies it (accepting `qualityTier >= QUALITY_TIER_CAPTION` rather
+  // than an exact match means a richer cached result is a bonus, not a
+  // requirement).
   const [cached] = await db
     .select({ recipeId: recipeCache.recipeId })
     .from(recipeCache)
-    .where(eq(recipeCache.canonicalUrl, canonicalUrl))
+    .where(
+      and(
+        eq(recipeCache.canonicalUrl, canonicalUrl),
+        eq(recipeCache.language, normalizedLanguage),
+        gte(recipeCache.qualityTier, QUALITY_TIER_CAPTION)
+      )
+    )
+    .orderBy(desc(recipeCache.qualityTier))
     .limit(1);
 
   if (cached) {
@@ -345,7 +377,7 @@ export async function submitAnonymousUrl(
 
   let parsed: RecipeOutput;
   try {
-    parsed = await parseRecipeFromText({ captionText, language });
+    parsed = await parseRecipeFromText({ captionText, language: normalizedLanguage });
   } catch (error) {
     // `parseRecipeFromText` throws this above 50,000 characters, and rethrows it
     // untouched from its own catch — so it arrives here as itself rather than
@@ -387,11 +419,20 @@ export async function submitAnonymousUrl(
       thumbnailUrl: oembedMeta?.thumbnailUrl,
       extractionStrategy: "oembed_caption",
       extractionDurationMs: 0,
+      ownerId: null,
     })
     .returning({ id: recipes.id, slug: recipes.slug, title: recipes.title });
 
   // 12. Cache it
-  await db.insert(recipeCache).values({ canonicalUrl, recipeId: recipe.id }).onConflictDoNothing();
+  await db
+    .insert(recipeCache)
+    .values({
+      canonicalUrl,
+      language: normalizedLanguage,
+      qualityTier: getQualityTierForStrategy("oembed_caption"),
+      recipeId: recipe.id,
+    })
+    .onConflictDoNothing();
 
   // 13. Consume the anonymous allowance
   await recordAnonExtraction(ipHash, canonicalUrl);
@@ -434,6 +475,10 @@ export async function submitWithDataFusion(
       ),
     };
   }
+
+  // 2b. Normalize before first use (parser call and, on a non-transcript
+  // result, the cache write below).
+  const normalizedLanguage = normalizeLanguageCode(language);
 
   // 3. Canonicalize
   let canonicalUrl: string;
@@ -490,7 +535,7 @@ export async function submitWithDataFusion(
     parsed = await parseRecipeFromText({
       captionText: captionText || undefined,
       transcriptText: transcript || undefined,
-      language,
+      language: normalizedLanguage,
     });
   } catch (error) {
     if (error instanceof TextTooLongError) {
@@ -540,15 +585,27 @@ export async function submitWithDataFusion(
       extractionStrategy: isClientTranscript ? "data_fusion" : "oembed_caption",
       extractionDurationMs: 0,
       isPublic: !isClientTranscript,
+      // The submitter owns their result either way — including the private,
+      // client-transcript case, where isPublic already keeps it off the
+      // public page regardless of who can edit it.
+      ownerId: session.user.id,
     })
     .returning({ id: recipes.id, slug: recipes.slug, title: recipes.title });
 
-  // 9. Cache result — skipped for a client-supplied transcript. recipe_cache is
-  // global and keyed only on canonical URL, so caching this would silently
-  // serve the same unverified content to every other user (including
-  // submitTikTokUrl's audio-transcribed result) who later requests this URL.
+  // 9. Cache result — skipped for a client-supplied transcript. recipe_cache
+  // is global, so caching this would silently serve the same unverified
+  // content to every other user (including submitTikTokUrl's audio-
+  // transcribed result) who later requests this URL in the same language.
   if (!isClientTranscript) {
-    await db.insert(recipeCache).values({ canonicalUrl, recipeId: recipe.id }).onConflictDoNothing();
+    await db
+      .insert(recipeCache)
+      .values({
+        canonicalUrl,
+        language: normalizedLanguage,
+        qualityTier: getQualityTierForStrategy("oembed_caption"),
+        recipeId: recipe.id,
+      })
+      .onConflictDoNothing();
   }
 
   // 10. Charge 1 credit after successful extraction. Uses the same atomic
