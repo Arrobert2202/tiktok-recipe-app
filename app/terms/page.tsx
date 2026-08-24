@@ -281,8 +281,9 @@ export default function TermsPage() {
       <p className="text-white/70 leading-relaxed">
         The service depends on independent companies that we don&apos;t control:
         TikTok (video captions and embeds), Google (sign-in), OpenAI (recipe
-        extraction and audio transcription), Stripe (payments), and our hosting
-        and infrastructure providers. Each has its own terms and privacy policy,
+        extraction and audio transcription), Stripe (payments), Resend
+        (creator opt-out email delivery), and our hosting and infrastructure
+        providers. Each has its own terms and privacy policy,
         and those apply to you when your use of our service touches them. If one
         of them changes or breaks, parts of our service may change or break too.
         We&apos;ll do our best, but we can&apos;t promise otherwise.

@@ -35,12 +35,17 @@ const PROCESSORS: { name: string; receives: string; why: string }[] = [
   {
     name: "Stripe",
     receives: "Your email and payment details, entered directly with Stripe",
-    why: "Processes subscription payments; we never see card numbers",
+    why: "Processes one-time credit-pack payments; we never see card numbers",
   },
   {
     name: "Trigger.dev",
     receives: "Extraction job records (the URL being processed, job status)",
     why: "Runs extractions as background jobs so the app stays responsive",
+  },
+  {
+    name: "Resend",
+    receives: "A creator's email address, when they submit the opt-out form",
+    why: "Delivers the one-click confirmation link for creator opt-out/reversal requests",
   },
 ];
 
@@ -98,7 +103,7 @@ export default function PrivacyPage() {
             <strong className="font-semibold text-white">
               Your credit balance
             </strong>{" "}
-            and, if you subscribe, your subscription status.
+            and a record of credit-pack purchases, if you've made any.
           </li>
           <li>
             <strong className="font-semibold text-white">
