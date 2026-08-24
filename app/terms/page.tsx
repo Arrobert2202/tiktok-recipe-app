@@ -215,9 +215,13 @@ export default function TermsPage() {
         and submit your handle. No account or negotiation required.
       </p>
       <p className="mt-3 text-white/70 leading-relaxed">
-        We commit to honouring opt-out requests{" "}
-        <strong className="font-semibold text-white">within 24 hours</strong>.
-        Once processed:
+        Submitting the form sends a one-click confirmation link to the email
+        you provide — nothing changes until that link is clicked, to stop
+        someone opting out on a creator's behalf without their knowledge.{" "}
+        <strong className="font-semibold text-white">
+          Once you click it, the opt-out takes effect immediately.
+        </strong>{" "}
+        That immediate effect includes:
       </p>
       <ul className="mt-3 list-disc list-inside space-y-2 text-white/70">
         <li>
@@ -349,12 +353,12 @@ export default function TermsPage() {
       </h2>
       <p className="text-white/70 leading-relaxed">
         Questions about these terms? Email{" "}
-        {/* TODO: Replace legal@tiktokrecipe.app with a real, monitored address before launch. Stripe review will check that this address works. */}
+        {/* Real, monitored inbox — replace with a dedicated legal@ address once a custom domain exists; Stripe's review checks that this address works. */}
         <a
-          href="mailto:legal@tiktokrecipe.app"
+          href="mailto:robertaron993@gmail.com"
           className="text-purple-400 hover:text-purple-300 transition-colors"
         >
-          legal@tiktokrecipe.app
+          robertaron993@gmail.com
         </a>
         . Creators can also use the{" "}
         <Link

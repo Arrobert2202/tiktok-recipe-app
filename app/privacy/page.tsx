@@ -422,12 +422,12 @@ export default function PrivacyPage() {
       <h2 className="text-xl font-semibold text-white mt-10 mb-3">Contact</h2>
       <p className="text-white/70 leading-relaxed">
         For privacy questions or to exercise any of your rights, email{" "}
-        {/* TODO: Replace privacy@tiktokrecipe.app with a real, monitored inbox before launch. GDPR/CCPA requests arrive here and carry response deadlines, so it must be watched by a human. Consider naming a data protection contact if EU volume grows. */}
+        {/* Real, monitored inbox — replace with a dedicated privacy@ address once a custom domain exists; GDPR/CCPA requests arrive here and carry response deadlines. */}
         <a
-          href="mailto:privacy@tiktokrecipe.app"
+          href="mailto:robertaron993@gmail.com"
           className="text-purple-400 hover:text-purple-300 transition-colors"
         >
-          privacy@tiktokrecipe.app
+          robertaron993@gmail.com
         </a>
         . Creators looking to remove their content can use the{" "}
         <Link

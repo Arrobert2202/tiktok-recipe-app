@@ -60,7 +60,7 @@ export async function deleteAccount(): Promise<DeleteAccountResult> {
     return {
       error: createError(
         "DELETE_FAILED",
-        "We couldn't delete your account. Please try again, or email privacy@tiktokrecipe.app and we'll do it for you."
+        "We couldn't delete your account. Please try again, or email robertaron993@gmail.com and we'll do it for you."
       ),
     };
   }

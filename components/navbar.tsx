@@ -49,59 +49,81 @@ export function Navbar() {
           </span>
         </Link>
 
-        {isPending ? (
-          <div className="h-9" />
-        ) : session ? (
-          <div className="flex items-center gap-1">
-            <Link
-              href="/"
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                pathname === "/"
-                  ? "bg-white/10 text-white"
-                  : "text-white/60 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <Wand2 className="w-4 h-4" />
-              Extract
-            </Link>
-            <Link
-              href="/cookbook"
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                pathname === "/cookbook"
-                  ? "bg-white/10 text-white"
-                  : "text-white/60 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <BookOpen className="w-4 h-4" />
-              Cookbook
-            </Link>
-            <Link
-              href="/shopping-list"
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                pathname === "/shopping-list"
-                  ? "bg-white/10 text-white"
-                  : "text-white/60 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <ShoppingCart className="w-4 h-4" />
-              Shopping
-            </Link>
-            <Link
-              href="/settings"
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                pathname === "/settings"
-                  ? "bg-white/10 text-white"
-                  : "text-white/60 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <Settings className="w-4 h-4" />
-              Settings
-            </Link>
+        <div className="flex items-center gap-1">
+          {isPending ? (
+            <div className="h-9" />
+          ) : session ? (
+            <>
+              <Link
+                href="/"
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  pathname === "/"
+                    ? "bg-white/10 text-white"
+                    : "text-white/60 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <Wand2 className="w-4 h-4" />
+                Extract
+              </Link>
+              <Link
+                href="/cookbook"
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  pathname === "/cookbook"
+                    ? "bg-white/10 text-white"
+                    : "text-white/60 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <BookOpen className="w-4 h-4" />
+                Cookbook
+              </Link>
+              <Link
+                href="/shopping-list"
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  pathname === "/shopping-list"
+                    ? "bg-white/10 text-white"
+                    : "text-white/60 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <ShoppingCart className="w-4 h-4" />
+                Shopping
+              </Link>
+              <Link
+                href="/settings"
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  pathname === "/settings"
+                    ? "bg-white/10 text-white"
+                    : "text-white/60 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <Settings className="w-4 h-4" />
+                Settings
+              </Link>
 
-            {/* Credit Counter */}
-            <CreditCounter />
+              {/* Credit Counter */}
+              <CreditCounter />
+            </>
+          ) : (
+            <>
+              <Link
+                href="/auth/signin"
+                className="text-sm font-medium text-white/60 hover:text-white transition-colors px-4 py-2"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/auth/signup"
+                className="rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 px-5 py-2.5 text-sm font-semibold text-white hover:from-purple-700 hover:to-pink-600 transition-all shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 active:scale-95"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
 
-            {/* Language Selector */}
+          {/* Language Selector — controls the language new extractions come
+              back in. Independent of sign-in state (localStorage-backed), so
+              it renders here regardless of session, including for anonymous
+              landing-page visitors whose extractions already honor it. */}
+          {!isPending && (
             <div className="relative ml-2" ref={langRef}>
               <button
                 onClick={() => setLangOpen(!langOpen)}
@@ -132,7 +154,9 @@ export function Navbar() {
                 </div>
               )}
             </div>
+          )}
 
+          {session && (
             <button
               onClick={handleSignOut}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all ml-2"
@@ -140,23 +164,8 @@ export function Navbar() {
               <LogOut className="w-4 h-4" />
               Sign Out
             </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-3">
-            <Link
-              href="/auth/signin"
-              className="text-sm font-medium text-white/60 hover:text-white transition-colors px-4 py-2"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 px-5 py-2.5 text-sm font-semibold text-white hover:from-purple-700 hover:to-pink-600 transition-all shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 active:scale-95"
-            >
-              Sign Up
-            </Link>
-          </div>
-        )}
+          )}
+        </div>
       </nav>
     </header>
   );

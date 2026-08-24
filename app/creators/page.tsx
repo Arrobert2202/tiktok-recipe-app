@@ -51,7 +51,7 @@ export default function CreatorPortalPage() {
       setFormState({
         status: "success",
         message:
-          "Check your email for a confirmation link — the request doesn't take effect until you click it. Changes take effect within 24 hours after that. The link expires in 7 days.",
+          "Check your email for a confirmation link — the request doesn't take effect until you click it. Once you do, it takes effect immediately. The link expires in 7 days.",
       });
       setHandle("");
       setEmail("");
@@ -137,8 +137,8 @@ export default function CreatorPortalPage() {
                 3
               </span>
               <span>
-                Existing recipes from your videos will be removed from public
-                share pages within 24 hours.
+                Existing recipes from your videos are removed from public
+                share pages immediately, in the same step.
               </span>
             </li>
             <li className="flex items-start gap-3">
@@ -335,10 +335,10 @@ export default function CreatorPortalPage() {
             If you have questions about how your content is used or need
             assistance with the opt-out process, please reach out to us at{" "}
             <a
-              href="mailto:creators@tiktokrecipe.app"
+              href="mailto:robertaron993@gmail.com"
               className="text-purple-400 hover:text-purple-300 transition-colors"
             >
-              creators@tiktokrecipe.app
+              robertaron993@gmail.com
             </a>
             . We typically respond within one business day.
           </p>
