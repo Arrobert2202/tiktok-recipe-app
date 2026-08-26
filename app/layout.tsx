@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ServiceWorkerRegistrar } from "@/components/sw-register";
+import { LanguageProvider } from "@/lib/use-language";
 import "./globals.css";
 
 const inter = Inter({
@@ -52,11 +53,13 @@ export default function RootLayout({
         <div className="ambient-glow ambient-glow-2" aria-hidden="true" />
         <div className="ambient-glow ambient-glow-3" aria-hidden="true" />
 
-        <div className="relative z-10">
-          <Navbar />
-          {children}
-          <Footer />
-        </div>
+        <LanguageProvider>
+          <div className="relative z-10">
+            <Navbar />
+            {children}
+            <Footer />
+          </div>
+        </LanguageProvider>
 
         <ServiceWorkerRegistrar />
       </body>

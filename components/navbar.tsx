@@ -12,7 +12,7 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
 
@@ -63,7 +63,7 @@ export function Navbar() {
                 }`}
               >
                 <Wand2 className="w-4 h-4" />
-                Extract
+                {t("nav.extract")}
               </Link>
               <Link
                 href="/cookbook"
@@ -74,7 +74,7 @@ export function Navbar() {
                 }`}
               >
                 <BookOpen className="w-4 h-4" />
-                Cookbook
+                {t("nav.cookbook")}
               </Link>
               <Link
                 href="/shopping-list"
@@ -85,7 +85,7 @@ export function Navbar() {
                 }`}
               >
                 <ShoppingCart className="w-4 h-4" />
-                Shopping
+                {t("nav.shopping")}
               </Link>
               <Link
                 href="/settings"
@@ -96,7 +96,7 @@ export function Navbar() {
                 }`}
               >
                 <Settings className="w-4 h-4" />
-                Settings
+                {t("nav.settings")}
               </Link>
 
               {/* Credit Counter */}
@@ -108,13 +108,13 @@ export function Navbar() {
                 href="/auth/signin"
                 className="text-sm font-medium text-white/60 hover:text-white transition-colors px-4 py-2"
               >
-                Sign In
+                {t("nav.signIn")}
               </Link>
               <Link
                 href="/auth/signup"
                 className="rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 px-5 py-2.5 text-sm font-semibold text-white hover:from-purple-700 hover:to-pink-600 transition-all shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 active:scale-95"
               >
-                Sign Up
+                {t("nav.signUp")}
               </Link>
             </>
           )}
@@ -128,7 +128,7 @@ export function Navbar() {
               <button
                 onClick={() => setLangOpen(!langOpen)}
                 className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm text-white/80 hover:bg-white/10 hover:border-white/20 transition-all"
-                aria-label="Select recipe language"
+                aria-label={t("nav.selectRecipeLanguage")}
               >
                 <span>{currentLang?.flag}</span>
                 <span className="uppercase text-xs font-medium">{language}</span>
@@ -162,7 +162,7 @@ export function Navbar() {
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all ml-2"
             >
               <LogOut className="w-4 h-4" />
-              Sign Out
+              {t("nav.signOut")}
             </button>
           )}
         </div>

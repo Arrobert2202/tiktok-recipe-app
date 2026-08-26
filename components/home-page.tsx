@@ -9,21 +9,19 @@ import { VideoDropzone } from "@/components/video-dropzone";
 import { PaywallModal } from "@/components/paywall-modal";
 import { useLanguage } from "@/lib/use-language";
 import { validateTikTokUrl } from "@/lib/url";
+import type { TranslationKey } from "@/lib/translations";
 
-const LOADING_STAGES = [
-  { text: "Fetching video info...", icon: "🔍" },
-  { text: "Transcribing audio...", icon: "🎙️" },
-  { text: "Extracting recipe with AI...", icon: "🧠" },
-  { text: "Plating the dish...", icon: "🍽️" },
+const LOADING_STAGES: { textKey: TranslationKey; icon: string }[] = [
+  { textKey: "home.loading.fetching", icon: "🔍" },
+  { textKey: "home.loading.transcribing", icon: "🎙️" },
+  { textKey: "home.loading.extracting", icon: "🧠" },
+  { textKey: "home.loading.plating", icon: "🍽️" },
 ];
-
-/** Same wording the server action returns, so one bad link reads the same either way. */
-const INVALID_URL_MESSAGE = "Please enter a valid TikTok video URL";
 
 function HomePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { language, ready: languageReady } = useLanguage();
+  const { language, ready: languageReady, t } = useLanguage();
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,12 +48,12 @@ function HomePageInner() {
             return;
           }
           if (data.status === "failed") {
-            setError(data.error?.message ?? "Extraction failed");
+            setError(data.error?.message ?? t("home.error.extractionFailed"));
             setIsLoading(false);
             return;
           }
           if (data.status === "timed_out") {
-            setError("Extraction timed out. Try again later.");
+            setError(t("home.error.timedOut"));
             setIsLoading(false);
             return;
           }
@@ -67,7 +65,7 @@ function HomePageInner() {
       };
       poll();
     },
-    [router]
+    [router, t]
   );
 
   const runExtraction = useCallback(
@@ -75,7 +73,7 @@ function HomePageInner() {
       setError(null);
       const trimmed = rawUrl.trim();
       if (!trimmed) {
-        setError("Paste a TikTok video URL to get started");
+        setError(t("home.error.pasteToStart"));
         return;
       }
 
@@ -125,11 +123,11 @@ function HomePageInner() {
         pollForCompletion(result.jobId);
       } catch {
         clearInterval(stageInterval);
-        setError("Something went wrong. Please try again.");
+        setError(t("home.error.generic"));
         setIsLoading(false);
       }
     },
-    [transcript, language, router, pollForCompletion]
+    [transcript, language, router, pollForCompletion, t]
   );
 
   /**
@@ -158,12 +156,12 @@ function HomePageInner() {
     setUrl(sharedUrl);
 
     if (!validateTikTokUrl(sharedUrl)) {
-      setError(INVALID_URL_MESSAGE);
+      setError(t("home.error.invalidUrl"));
       return;
     }
 
     void runExtraction(sharedUrl);
-  }, [searchParams, runExtraction, languageReady]);
+  }, [searchParams, runExtraction, languageReady, t]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -209,20 +207,20 @@ function HomePageInner() {
           className="inline-flex items-center gap-2 rounded-full bg-purple-500/20 border border-purple-500/30 backdrop-blur-sm px-4 py-1.5 mb-6"
         >
           <Sparkles className="w-4 h-4 text-purple-400" />
-          <span className="text-sm font-medium text-purple-300">AI-Powered Recipe Extraction</span>
+          <span className="text-sm font-medium text-purple-300">{t("home.badge")}</span>
         </motion.div>
 
         {/* Hero headline with gradient text */}
         <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6">
           <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
-            TikTok recipes,
+            {t("home.headline.part1")}
           </span>
           <br />
-          <span className="text-white">beautifully extracted.</span>
+          <span className="text-white">{t("home.headline.part2")}</span>
         </h1>
 
         <p className="text-lg sm:text-xl text-white/50 mb-12 max-w-lg mx-auto leading-relaxed">
-          Paste any TikTok cooking video. Our AI extracts ingredients, steps, and serves them up — ready to cook.
+          {t("home.subheadline")}
         </p>
 
         {/* Glassmorphic search bar */}
@@ -246,15 +244,15 @@ function HomePageInner() {
                     type="url"
                     value={url}
                     onChange={(e) => { setUrl(e.target.value); setError(null); }}
-                    placeholder="Paste a TikTok video URL..."
+                    placeholder={t("home.urlPlaceholder")}
                     className="flex-1 bg-transparent text-lg text-white placeholder:text-white/30 focus:outline-none py-4"
-                    aria-label="TikTok video URL"
+                    aria-label={t("home.urlInputAriaLabel")}
                   />
                   <button
                     type="submit"
                     className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold px-6 py-3.5 rounded-xl hover:from-purple-700 hover:to-pink-600 transition-all shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 active:scale-95"
                   >
-                    Extract
+                    {t("home.extractButton")}
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -288,7 +286,7 @@ function HomePageInner() {
               <div className="space-y-6">
                 {LOADING_STAGES.map((stage, index) => (
                   <motion.div
-                    key={stage.text}
+                    key={stage.textKey}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{
                       opacity: index <= loadingStage ? 1 : 0.3,
@@ -307,7 +305,7 @@ function HomePageInner() {
                     <span className={`text-lg font-medium ${
                       index <= loadingStage ? "text-white" : "text-white/30"
                     }`}>
-                      {stage.text}
+                      {t(stage.textKey)}
                     </span>
                     {index < loadingStage && (
                       <motion.span
@@ -332,7 +330,7 @@ function HomePageInner() {
           transition={{ delay: 1, duration: 0.8 }}
           className="mt-8 text-sm text-white/30"
         >
-          Works with any TikTok cooking video &middot; Free to use
+          {t("home.socialProof")}
         </motion.p>
       </motion.div>
 
