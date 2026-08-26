@@ -15,6 +15,7 @@ import {
 import { ShareButton } from "@/components/share-button";
 import { RecipeCardDownload } from "@/components/recipe-card-download";
 import { SaveRecipeCta } from "@/components/save-recipe-cta";
+import { RecipeSectionHeading } from "@/components/recipe-section-heading";
 import type { Ingredient } from "@/lib/types";
 
 interface RecipePageProps {
@@ -113,24 +114,27 @@ export default async function RecipePage({ params }: RecipePageProps) {
               </div>
 
               <section className="mb-8">
-                <h2 className="text-sm font-semibold text-white/50 uppercase tracking-wide mb-4">
-                  Ingredients
-                </h2>
+                <RecipeSectionHeading
+                  translationKey="recipeDetail.ingredients"
+                  className="text-sm font-semibold text-white/50 uppercase tracking-wide mb-4"
+                />
                 <IngredientList ingredients={ingredients} recipeId={recipe.id} />
               </section>
 
               <section>
-                <h2 className="text-sm font-semibold text-white/50 uppercase tracking-wide mb-4">
-                  Steps
-                </h2>
+                <RecipeSectionHeading
+                  translationKey="recipeDetail.steps"
+                  className="text-sm font-semibold text-white/50 uppercase tracking-wide mb-4"
+                />
                 <StepList steps={steps} />
               </section>
 
               {tipsAndTricks.length > 0 && (
                 <section className="mt-8">
-                  <h2 className="text-sm font-semibold text-white/50 uppercase tracking-wide mb-4">
-                    Tips &amp; Tricks
-                  </h2>
+                  <RecipeSectionHeading
+                    translationKey="recipeDetail.tipsAndTricks"
+                    className="text-sm font-semibold text-white/50 uppercase tracking-wide mb-4"
+                  />
                   <div className="space-y-3">
                     {tipsAndTricks.map((tip, index) => (
                       <div key={index} className="flex gap-3 items-start backdrop-blur-sm bg-amber-500/5 border border-amber-500/10 rounded-xl px-4 py-3">

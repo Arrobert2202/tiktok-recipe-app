@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getUserCookbook } from "@/lib/cookbook-queries";
 import { CookbookGrid } from "@/components/cookbook-grid";
+import { CookbookHeader } from "@/components/cookbook-header";
 
 export default async function CookbookPage() {
   const requestHeaders = await headers();
@@ -17,12 +18,7 @@ export default async function CookbookPage() {
   return (
     <main className="min-h-screen">
       <div className="mx-auto max-w-6xl px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-white">My Cookbook</h1>
-          <p className="mt-1 text-sm text-white/50">
-            {entries.length} {entries.length === 1 ? "recipe" : "recipes"} saved
-          </p>
-        </div>
+        <CookbookHeader count={entries.length} />
 
         <CookbookGrid initialEntries={entries} />
       </div>

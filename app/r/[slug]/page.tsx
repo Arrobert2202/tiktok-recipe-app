@@ -9,6 +9,8 @@ import { StepList } from "@/components/step-list";
 import { ShareButton } from "@/components/share-button";
 import { RecipeCardDownload } from "@/components/recipe-card-download";
 import { SaveRecipeCta } from "@/components/save-recipe-cta";
+import { RecipeSectionHeading } from "@/components/recipe-section-heading";
+import { RecipeOptedOutNotice } from "@/components/recipe-opted-out-notice";
 import { buildRecipeJsonLd } from "@/lib/recipe-schema";
 import type { Ingredient } from "@/lib/types";
 import type { Metadata } from "next";
@@ -65,16 +67,7 @@ export default async function SharePage({ params }: SharePageProps) {
   const tipsAndTricks = (recipe.tipsAndTricks as string[] | null) ?? [];
 
   if (!recipe.isPublic) {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-8">
-        <h1 className="text-2xl font-bold text-white mb-2">
-          Creator Opted Out
-        </h1>
-        <p className="text-white/60">
-          The creator of this recipe has opted out of public sharing.
-        </p>
-      </main>
-    );
+    return <RecipeOptedOutNotice />;
   }
 
   // Reached only for public recipes — the opt-out guard above returns early,
@@ -119,24 +112,27 @@ export default async function SharePage({ params }: SharePageProps) {
         </div>
 
         <section className="mt-6">
-          <h2 className="text-sm font-semibold text-white/50 uppercase tracking-wide mb-3">
-            Ingredients
-          </h2>
+          <RecipeSectionHeading
+            translationKey="recipeDetail.ingredients"
+            className="text-sm font-semibold text-white/50 uppercase tracking-wide mb-3"
+          />
           <IngredientList ingredients={ingredients} recipeId={recipe.id} />
         </section>
 
         <section className="mt-6">
-          <h2 className="text-sm font-semibold text-white/50 uppercase tracking-wide mb-3">
-            Steps
-          </h2>
+          <RecipeSectionHeading
+            translationKey="recipeDetail.steps"
+            className="text-sm font-semibold text-white/50 uppercase tracking-wide mb-3"
+          />
           <StepList steps={steps} />
         </section>
 
         {tipsAndTricks.length > 0 && (
           <section className="mt-8">
-            <h2 className="text-sm font-semibold text-white/50 uppercase tracking-wide mb-4">
-              Tips &amp; Tricks
-            </h2>
+            <RecipeSectionHeading
+              translationKey="recipeDetail.tipsAndTricks"
+              className="text-sm font-semibold text-white/50 uppercase tracking-wide mb-4"
+            />
             <div className="space-y-3">
               {tipsAndTricks.map((tip, index) => (
                 <div key={index} className="flex gap-3 items-start backdrop-blur-sm bg-amber-500/5 border border-amber-500/10 rounded-xl px-4 py-3">

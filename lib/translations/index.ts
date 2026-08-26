@@ -9,6 +9,8 @@ import { account } from "./account";
 import { shoppingList } from "./shoppingList";
 import { recipeView } from "./recipeView";
 import { creators } from "./creators";
+import { settings } from "./settings";
+import { recipeDetail } from "./recipeDetail";
 
 export const TRANSLATIONS = {
   ...nav,
@@ -22,6 +24,8 @@ export const TRANSLATIONS = {
   ...shoppingList,
   ...recipeView,
   ...creators,
+  ...settings,
+  ...recipeDetail,
 };
 
 export type TranslationKey = keyof typeof TRANSLATIONS;
