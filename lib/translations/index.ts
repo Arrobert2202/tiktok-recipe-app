@@ -13,6 +13,7 @@ import { settings } from "./settings";
 import { recipeDetail } from "./recipeDetail";
 import { share } from "./share";
 import { install } from "./install";
+import { metadata } from "./metadata";
 
 export const TRANSLATIONS = {
   ...nav,
@@ -30,6 +31,7 @@ export const TRANSLATIONS = {
   ...recipeDetail,
   ...share,
   ...install,
+  ...metadata,
 };
 
 export type TranslationKey = keyof typeof TRANSLATIONS;

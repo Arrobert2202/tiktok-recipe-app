@@ -2,29 +2,32 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { getServerLanguage, translateForMetadata } from "@/lib/get-server-language";
 import HomePage from "@/components/home-page";
 import LandingPage from "@/components/landing-page";
 
-const TITLE = "Turn any TikTok cooking video into a recipe you can cook from";
-const DESCRIPTION =
-  "Paste a TikTok link and get clean ingredients, ordered steps, and the tips the chef says out loud but never writes down. Cook Mode, aisle-grouped shopping lists, and always credited back to the creator. One free recipe, no account needed.";
+export async function generateMetadata(): Promise<Metadata> {
+  const language = await getServerLanguage();
+  const title = translateForMetadata("metadata.home.title", language);
+  const description = translateForMetadata("metadata.home.description", language);
 
-export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  openGraph: {
-    type: "website",
-    title: TITLE,
-    description: DESCRIPTION,
-    url: "/",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: TITLE,
-    description: DESCRIPTION,
-  },
-  alternates: { canonical: "/" },
-};
+  return {
+    title,
+    description,
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: "/",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+    alternates: { canonical: "/" },
+  };
+}
 
 /**
  * Static shell shown while the client hero loads. Mirrors the hero's boxes so

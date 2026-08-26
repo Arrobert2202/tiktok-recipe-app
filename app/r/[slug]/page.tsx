@@ -12,6 +12,7 @@ import { SaveRecipeCta } from "@/components/save-recipe-cta";
 import { RecipeSectionHeading } from "@/components/recipe-section-heading";
 import { RecipeOptedOutNotice } from "@/components/recipe-opted-out-notice";
 import { buildRecipeJsonLd } from "@/lib/recipe-schema";
+import { getServerLanguage, translateForMetadata } from "@/lib/get-server-language";
 import type { Ingredient } from "@/lib/types";
 import type { Metadata } from "next";
 
@@ -30,7 +31,8 @@ export async function generateMetadata({
     .where(eq(recipes.slug, slug));
 
   if (!recipe) {
-    return { title: "Recipe Not Found" };
+    const language = await getServerLanguage();
+    return { title: translateForMetadata("recipeDetail.notFound.heading", language) };
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";

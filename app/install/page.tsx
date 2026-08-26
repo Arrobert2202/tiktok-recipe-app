@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { InstallPageContent } from "@/components/install-page-content";
+import { getServerLanguage, translateForMetadata } from "@/lib/get-server-language";
 
-export const metadata: Metadata = {
-  title: "Install RecipeApp",
-  description:
-    "Put RecipeApp in your phone's share sheet so any TikTok cooking video becomes a recipe in two taps.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const language = await getServerLanguage();
+
+  return {
+    title: translateForMetadata("install.heading", language),
+    description: translateForMetadata("metadata.install.description", language),
+  };
+}
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 

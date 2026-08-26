@@ -4,12 +4,17 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getUserCredits } from "@/lib/credits";
 import { SettingsPageContent } from "@/components/settings-page-content";
+import { getServerLanguage, translateForMetadata } from "@/lib/get-server-language";
 
-export const metadata: Metadata = {
-  title: "Settings",
-  description: "Your account details, credit balance, and account deletion.",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const language = await getServerLanguage();
+
+  return {
+    title: translateForMetadata("settings.heading", language),
+    description: translateForMetadata("metadata.settings.description", language),
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function SettingsPage() {
   const requestHeaders = await headers();

@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { TRANSLATIONS, type TranslationKey } from "@/lib/translations";
+import { LANGUAGE_COOKIE_NAME } from "@/lib/language-cookie";
 
 export const SUPPORTED_LANGUAGES = [
   { code: "en", name: "English", flag: "🇬🇧" },
@@ -29,8 +30,6 @@ export const SUPPORTED_LANGUAGES = [
 ] as const;
 
 export type LanguageCode = (typeof SUPPORTED_LANGUAGES)[number]["code"];
-
-const STORAGE_KEY = "recipe-language";
 
 interface LanguageContextValue {
   language: LanguageCode;
@@ -67,25 +66,43 @@ function interpolate(template: string, params?: Record<string, string | number>)
  * landing page) without a full reload. The translation system needs one
  * consistent, live value everywhere anyway, so this fixes both at once.
  */
+/**
+ * Writes both localStorage (read on the client's next mount) and a cookie
+ * (read server-side by getServerLanguage() so page <title>/description can
+ * match before any client JS runs). A year-long cookie lifetime matches the
+ * "set once, stays" feel localStorage already has.
+ */
+function persistLanguage(code: LanguageCode) {
+  localStorage.setItem(LANGUAGE_COOKIE_NAME, code);
+  document.cookie = `${LANGUAGE_COOKIE_NAME}=${code}; path=/; max-age=31536000; samesite=lax`;
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<LanguageCode>("en");
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(LANGUAGE_COOKIE_NAME);
     if (stored && SUPPORTED_LANGUAGES.some((l) => l.code === stored)) {
       setLanguageState(stored as LanguageCode);
+      // Backfills the cookie for visitors who picked a language before the
+      // cookie existed — otherwise the server keeps guessing from
+      // Accept-Language forever even though the client already knows better.
+      persistLanguage(stored as LanguageCode);
     } else {
       const browserLang = navigator.language.split("-")[0];
       const match = SUPPORTED_LANGUAGES.find((l) => l.code === browserLang);
-      if (match) setLanguageState(match.code);
+      if (match) {
+        setLanguageState(match.code);
+        persistLanguage(match.code);
+      }
     }
     setReady(true);
   }, []);
 
   const setLanguage = useCallback((code: LanguageCode) => {
     setLanguageState(code);
-    localStorage.setItem(STORAGE_KEY, code);
+    persistLanguage(code);
   }, []);
 
   const t = useCallback(

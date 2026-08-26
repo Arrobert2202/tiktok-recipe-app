@@ -2,13 +2,18 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { extractTikTokUrlFromShare } from "@/lib/share-target";
 import { ShareFallbackContent } from "@/components/share-fallback-content";
+import { getServerLanguage, translateForMetadata } from "@/lib/get-server-language";
 
-export const metadata: Metadata = {
-  title: "Shared link",
-  description: "Turn a shared TikTok cooking video into a recipe.",
-  // A share receiver has nothing durable to index.
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const language = await getServerLanguage();
+
+  return {
+    title: translateForMetadata("metadata.share.title", language),
+    description: translateForMetadata("metadata.share.description", language),
+    // A share receiver has nothing durable to index.
+    robots: { index: false, follow: false },
+  };
+}
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
