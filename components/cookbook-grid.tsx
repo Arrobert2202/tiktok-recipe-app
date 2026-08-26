@@ -10,20 +10,22 @@ import { removeRecipeFromCookbook } from "@/actions/cookbook";
 import { applyOptimisticAction } from "@/lib/cookbook-grid-state";
 import type { CookbookEntry, CookbookSortField } from "@/lib/cookbook-queries";
 import type { Ingredient } from "@/lib/types";
+import { useLanguage } from "@/lib/use-language";
+import type { TranslationKey } from "@/lib/translations";
 
 interface CookbookGridProps {
   initialEntries: CookbookEntry[];
 }
 
 type SortOption = {
-  label: string;
+  labelKey: TranslationKey;
   field: CookbookSortField;
 };
 
 const SORT_OPTIONS: SortOption[] = [
-  { label: "Recently Saved", field: "savedAt" },
-  { label: "Title", field: "title" },
-  { label: "Date Added", field: "createdAt" },
+  { labelKey: "cookbook.sort.recentlySaved", field: "savedAt" },
+  { labelKey: "cookbook.sort.title", field: "title" },
+  { labelKey: "cookbook.sort.dateAdded", field: "createdAt" },
 ];
 
 function sortEntries(
@@ -60,6 +62,7 @@ function filterEntries(
 }
 
 export function CookbookGrid({ initialEntries }: CookbookGridProps) {
+  const { t, tCount } = useLanguage();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSort, setActiveSort] = useState<CookbookSortField>("savedAt");
@@ -178,7 +181,7 @@ export function CookbookGrid({ initialEntries }: CookbookGridProps) {
           </svg>
           <input
             type="text"
-            placeholder="Search by title, ingredient, or tag..."
+            placeholder={t("cookbook.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-xl border border-white/10 bg-white/5 py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/30 focus:border-purple-500/50 focus:outline-none focus:ring-1 focus:ring-purple-500/50"
@@ -187,7 +190,7 @@ export function CookbookGrid({ initialEntries }: CookbookGridProps) {
 
         {/* Sort + Select Controls */}
         <div className="flex items-center gap-1">
-          <span className="text-xs text-white/40 mr-1">Sort:</span>
+          <span className="text-xs text-white/40 mr-1">{t("cookbook.sortLabel")}</span>
           {SORT_OPTIONS.map((option) => (
             <button
               key={option.field}
@@ -198,7 +201,7 @@ export function CookbookGrid({ initialEntries }: CookbookGridProps) {
                   : "text-white/50 hover:bg-white/5 hover:text-white/70"
               }`}
             >
-              {option.label}
+              {t(option.labelKey)}
             </button>
           ))}
 
@@ -214,12 +217,12 @@ export function CookbookGrid({ initialEntries }: CookbookGridProps) {
             {isSelecting ? (
               <>
                 <X className="h-3.5 w-3.5" />
-                Cancel
+                {t("cookbook.cancel")}
               </>
             ) : (
               <>
                 <CheckSquare className="h-3.5 w-3.5" />
-                Select
+                {t("cookbook.select")}
               </>
             )}
           </button>
@@ -232,23 +235,19 @@ export function CookbookGrid({ initialEntries }: CookbookGridProps) {
           {searchQuery ? (
             <>
               <p className="text-white/50 text-sm">
-                No recipes match &ldquo;{searchQuery}&rdquo;
+                {t("cookbook.noResultsFor", { query: searchQuery })}
               </p>
               <button
                 onClick={() => setSearchQuery("")}
                 className="mt-2 text-sm text-purple-400 hover:text-purple-300 transition-colors"
               >
-                Clear search
+                {t("cookbook.clearSearch")}
               </button>
             </>
           ) : (
             <>
-              <p className="text-white/50 text-sm">
-                Your cookbook is empty.
-              </p>
-              <p className="mt-1 text-white/30 text-xs">
-                Extract a recipe from a TikTok video to get started.
-              </p>
+              <p className="text-white/50 text-sm">{t("cookbook.emptyHeading")}</p>
+              <p className="mt-1 text-white/30 text-xs">{t("cookbook.emptySubtext")}</p>
             </>
           )}
         </div>
@@ -279,14 +278,13 @@ export function CookbookGrid({ initialEntries }: CookbookGridProps) {
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-white">
-                {selectedIds.length}{" "}
-                {selectedIds.length === 1 ? "recipe" : "recipes"} selected
+                {tCount("cookbook.selectedCount", selectedIds.length)}
               </span>
               <button
                 onClick={() => setSelectedIds([])}
                 className="text-xs text-white/50 hover:text-white transition-colors"
               >
-                Clear
+                {t("cookbook.clear")}
               </button>
             </div>
 
@@ -294,7 +292,7 @@ export function CookbookGrid({ initialEntries }: CookbookGridProps) {
               href={shoppingListHref}
               className="rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:from-purple-700 hover:to-pink-600 hover:shadow-purple-500/40 active:scale-95"
             >
-              🛒 Shopping List
+              🛒 {t("cookbook.shoppingListLink")}
             </Link>
           </div>
         </div>

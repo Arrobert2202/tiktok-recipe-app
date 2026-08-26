@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Check, Pencil } from "lucide-react";
 import type { CookbookEntry } from "@/lib/cookbook-queries";
+import { useLanguage } from "@/lib/use-language";
 
 interface RecipeCardProps {
   entry: CookbookEntry;
@@ -28,6 +29,7 @@ export function RecipeCard({
   onToggleSelect,
   onEdit,
 }: RecipeCardProps) {
+  const { t, tCount } = useLanguage();
   const thumbnail = entry.thumbnailUrl ? (
     <img
       src={entry.thumbnailUrl}
@@ -54,7 +56,9 @@ export function RecipeCard({
           type="button"
           onClick={() => onToggleSelect?.(entry.recipeId)}
           aria-pressed={selected}
-          aria-label={`${selected ? "Deselect" : "Select"} ${entry.title}`}
+          aria-label={t(selected ? "cookbook.deselectCardAria" : "cookbook.selectCardAria", {
+            title: entry.title,
+          })}
           className="block w-full cursor-pointer text-left"
         >
           <div className="relative h-40 w-full overflow-hidden rounded-t-2xl">
@@ -72,8 +76,7 @@ export function RecipeCard({
             </h3>
             <p className="mt-1 text-xs text-white/50">@{entry.creatorHandle}</p>
             <p className="mt-1 text-xs text-white/30">
-              {entry.ingredients.length}{" "}
-              {entry.ingredients.length === 1 ? "ingredient" : "ingredients"}
+              {tCount("cookbook.ingredientCount", entry.ingredients.length)}
             </p>
           </div>
         </button>
@@ -139,7 +142,7 @@ export function RecipeCard({
           <button
             onClick={() => onEdit(entry)}
             className="rounded-full bg-black/50 backdrop-blur-sm p-1.5 text-white/40 opacity-0 shadow-sm transition-opacity hover:text-purple-400 group-hover:opacity-100 focus:opacity-100"
-            aria-label={`Edit ${entry.title}`}
+            aria-label={t("cookbook.editCardAria", { title: entry.title })}
           >
             <Pencil className="h-4 w-4" />
           </button>
@@ -149,7 +152,7 @@ export function RecipeCard({
           onClick={() => onRemove(entry.recipeId)}
           disabled={isRemoving}
           className="rounded-full bg-black/50 backdrop-blur-sm p-1.5 text-white/40 opacity-0 shadow-sm transition-opacity hover:text-red-400 group-hover:opacity-100 focus:opacity-100 disabled:cursor-not-allowed"
-          aria-label={`Remove ${entry.title} from cookbook`}
+          aria-label={t("cookbook.removeCardAria", { title: entry.title })}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

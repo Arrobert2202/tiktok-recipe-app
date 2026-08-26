@@ -5,29 +5,32 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Check, Crown, Sparkles, Loader2 } from "lucide-react";
 import { createCheckoutSession } from "@/actions/billing";
 import { CREDIT_PACKS } from "@/lib/credit-packs";
+import { useLanguage } from "@/lib/use-language";
+import type { TranslationKey } from "@/lib/translations";
 
 interface PaywallModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const FEATURES = [
-  "1 credit = 1 recipe extraction",
-  "Full audio transcription (AI-powered)",
-  "Tips & Tricks from chef audio",
-  "Upload video for maximum accuracy",
-  "Credits never expire",
+const FEATURE_KEYS: TranslationKey[] = [
+  "paywall.feature.creditsExtraction",
+  "paywall.feature.audioTranscription",
+  "paywall.feature.tips",
+  "paywall.feature.videoUpload",
+  "paywall.feature.neverExpire",
 ];
 
 function formatPrice(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
-function pricePerCredit(pack: (typeof CREDIT_PACKS)[number]): string {
-  return `${(pack.priceCents / pack.credits / 100).toFixed(2)}/credit`;
+function pricePerCreditValue(pack: (typeof CREDIT_PACKS)[number]): string {
+  return `$${(pack.priceCents / pack.credits / 100).toFixed(2)}`;
 }
 
 export function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
+  const { t } = useLanguage();
   const [isPending, startTransition] = useTransition();
   const [pendingPackId, setPendingPackId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +46,7 @@ export function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
         window.location.href = result.url;
         return;
       }
-      setError(result.error ?? "Something went wrong. Please try again.");
+      setError(result.error ?? t("paywall.error.generic"));
       setPendingPackId(null);
     });
   }
@@ -77,7 +80,7 @@ export function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
           <button
             onClick={onClose}
             className="absolute top-4 right-4 z-10 rounded-full bg-white/5 p-2 text-white/50 hover:bg-white/10 hover:text-white transition-all"
-            aria-label="Close"
+            aria-label={t("paywall.close")}
           >
             <X className="w-4 h-4" />
           </button>
@@ -100,11 +103,9 @@ export function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
 
             {/* Headline */}
             <h2 className="text-2xl font-bold text-center text-white mb-2">
-              Buy credits
+              {t("paywall.headline")}
             </h2>
-            <p className="text-center text-white/50 mb-8">
-              You&apos;ve used your free credits. Grab a pack to keep extracting.
-            </p>
+            <p className="text-center text-white/50 mb-8">{t("paywall.subtext")}</p>
 
             {error && (
               <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-center text-sm text-red-400">
@@ -130,14 +131,18 @@ export function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-white">{pack.label}</span>
+                        <span className="font-semibold text-white">
+                          {t("paywall.packLabel", { n: pack.credits })}
+                        </span>
                         {isBest && (
                           <span className="rounded-full bg-purple-500/20 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-purple-300">
-                            Best value
+                            {t("paywall.bestValue")}
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-white/40">{pricePerCredit(pack)}</span>
+                      <span className="text-xs text-white/40">
+                        {t("paywall.pricePerCredit", { price: pricePerCreditValue(pack) })}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-lg font-bold text-white">
@@ -152,12 +157,12 @@ export function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
 
             {/* Features */}
             <ul className="space-y-3 mb-8">
-              {FEATURES.map((feature) => (
-                <li key={feature} className="flex items-center gap-3">
+              {FEATURE_KEYS.map((featureKey) => (
+                <li key={featureKey} className="flex items-center gap-3">
                   <div className="flex items-center justify-center w-5 h-5 rounded-full bg-purple-500/20">
                     <Check className="w-3 h-3 text-purple-400" />
                   </div>
-                  <span className="text-sm text-white/70">{feature}</span>
+                  <span className="text-sm text-white/70">{t(featureKey)}</span>
                 </li>
               ))}
             </ul>
@@ -165,7 +170,7 @@ export function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
             {/* Trust signals */}
             <p className="text-center text-xs text-white/30 flex items-center justify-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" />
-              Secure payment via Stripe &middot; No subscription &middot; Instant credit
+              {t("paywall.trustSignals")}
             </p>
           </div>
         </motion.div>

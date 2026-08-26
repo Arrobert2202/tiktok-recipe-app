@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useTransition } from "react";
 import { updateRecipe } from "@/actions/recipe";
 import type { Ingredient } from "@/lib/types";
+import { useLanguage } from "@/lib/use-language";
 
 interface EditModalProps {
   recipeId: string;
@@ -29,6 +30,7 @@ export function EditModal({
   onClose,
   onSaved,
 }: EditModalProps) {
+  const { t } = useLanguage();
   const [title, setTitle] = useState(initialData.title);
   const [ingredients, setIngredients] = useState(initialData.ingredients);
   const [steps, setSteps] = useState(initialData.steps);
@@ -133,14 +135,14 @@ export function EditModal({
     if (tags.length >= 20) {
       setErrors((prev) => ({
         ...prev,
-        tags: "A recipe may have at most 20 tags",
+        tags: t("editModal.tagLimitError"),
       }));
       return;
     }
     if (trimmed.length > 50) {
       setErrors((prev) => ({
         ...prev,
-        tags: "Tag must be at most 50 characters",
+        tags: t("editModal.tagLengthError"),
       }));
       return;
     }
@@ -195,7 +197,7 @@ export function EditModal({
       onClick={onClose}
       aria-modal="true"
       role="dialog"
-      aria-label="Edit recipe"
+      aria-label={t("editModal.heading")}
     >
       <div
         className="relative mx-4 flex max-h-[90vh] w-full max-w-2xl flex-col rounded-xl bg-white shadow-xl"
@@ -203,11 +205,11 @@ export function EditModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <h2 className="text-lg font-semibold text-gray-900">Edit Recipe</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t("editModal.heading")}</h2>
           <button
             onClick={onClose}
             className="rounded-md p-1 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            aria-label="Close"
+            aria-label={t("editModal.close")}
           >
             <svg
               className="h-5 w-5"
@@ -243,7 +245,7 @@ export function EditModal({
               htmlFor="edit-title"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Title
+              {t("editModal.titleLabel")}
             </label>
             <input
               id="edit-title"
@@ -272,7 +274,7 @@ export function EditModal({
           {/* Ingredients editor */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ingredients
+              {t("editModal.ingredientsLabel")}
             </label>
             {errors.ingredients && (
               <p className="mb-2 text-xs text-red-600" role="alert">
@@ -288,7 +290,7 @@ export function EditModal({
                       onClick={() => moveIngredient(index, "up")}
                       disabled={index === 0}
                       className="rounded p-0.5 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                      aria-label={`Move ingredient ${index + 1} up`}
+                      aria-label={t("editModal.moveIngredientUp", { n: index + 1 })}
                     >
                       <svg
                         className="h-4 w-4"
@@ -309,7 +311,7 @@ export function EditModal({
                       onClick={() => moveIngredient(index, "down")}
                       disabled={index === ingredients.length - 1}
                       className="rounded p-0.5 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                      aria-label={`Move ingredient ${index + 1} down`}
+                      aria-label={t("editModal.moveIngredientDown", { n: index + 1 })}
                     >
                       <svg
                         className="h-4 w-4"
@@ -332,9 +334,9 @@ export function EditModal({
                     onChange={(e) =>
                       updateIngredient(index, "quantity", e.target.value)
                     }
-                    placeholder="Qty"
+                    placeholder={t("editModal.qtyPlaceholder")}
                     className="w-16 rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
-                    aria-label={`Ingredient ${index + 1} quantity`}
+                    aria-label={t("editModal.ingredientQuantityAria", { n: index + 1 })}
                   />
                   <input
                     type="text"
@@ -342,9 +344,9 @@ export function EditModal({
                     onChange={(e) =>
                       updateIngredient(index, "unit", e.target.value)
                     }
-                    placeholder="Unit"
+                    placeholder={t("editModal.unitPlaceholder")}
                     className="w-16 rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
-                    aria-label={`Ingredient ${index + 1} unit`}
+                    aria-label={t("editModal.ingredientUnitAria", { n: index + 1 })}
                   />
                   <input
                     type="text"
@@ -352,15 +354,15 @@ export function EditModal({
                     onChange={(e) =>
                       updateIngredient(index, "name", e.target.value)
                     }
-                    placeholder="Ingredient name (required)"
+                    placeholder={t("editModal.ingredientNamePlaceholder")}
                     className="flex-1 rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
-                    aria-label={`Ingredient ${index + 1} name`}
+                    aria-label={t("editModal.ingredientNameAria", { n: index + 1 })}
                   />
                   <button
                     type="button"
                     onClick={() => removeIngredient(index)}
                     className="rounded p-1 text-gray-400 hover:text-red-500"
-                    aria-label={`Remove ingredient ${index + 1}`}
+                    aria-label={t("editModal.removeIngredientAria", { n: index + 1 })}
                   >
                     <svg
                       className="h-4 w-4"
@@ -384,14 +386,14 @@ export function EditModal({
               onClick={addIngredient}
               className="mt-2 rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:border-purple-400 hover:text-purple-600"
             >
-              + Add ingredient
+              {t("editModal.addIngredient")}
             </button>
           </div>
 
           {/* Steps editor */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Steps
+              {t("editModal.stepsLabel")}
             </label>
             {errors.steps && (
               <p className="mb-2 text-xs text-red-600" role="alert">
@@ -407,7 +409,7 @@ export function EditModal({
                       onClick={() => moveStep(index, "up")}
                       disabled={index === 0}
                       className="rounded p-0.5 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                      aria-label={`Move step ${index + 1} up`}
+                      aria-label={t("editModal.moveStepUp", { n: index + 1 })}
                     >
                       <svg
                         className="h-4 w-4"
@@ -428,7 +430,7 @@ export function EditModal({
                       onClick={() => moveStep(index, "down")}
                       disabled={index === steps.length - 1}
                       className="rounded p-0.5 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                      aria-label={`Move step ${index + 1} down`}
+                      aria-label={t("editModal.moveStepDown", { n: index + 1 })}
                     >
                       <svg
                         className="h-4 w-4"
@@ -451,16 +453,16 @@ export function EditModal({
                   <textarea
                     value={step}
                     onChange={(e) => updateStep(index, e.target.value)}
-                    placeholder="Describe this step..."
+                    placeholder={t("editModal.stepPlaceholder")}
                     rows={2}
                     className="flex-1 rounded-md border border-gray-300 px-2 py-1.5 text-sm resize-y focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
-                    aria-label={`Step ${index + 1}`}
+                    aria-label={t("editModal.stepAria", { n: index + 1 })}
                   />
                   <button
                     type="button"
                     onClick={() => removeStep(index)}
                     className="rounded p-1 text-gray-400 hover:text-red-500"
-                    aria-label={`Remove step ${index + 1}`}
+                    aria-label={t("editModal.removeStepAria", { n: index + 1 })}
                   >
                     <svg
                       className="h-4 w-4"
@@ -484,14 +486,14 @@ export function EditModal({
               onClick={addStep}
               className="mt-2 rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:border-purple-400 hover:text-purple-600"
             >
-              + Add step
+              {t("editModal.addStep")}
             </button>
           </div>
 
           {/* Tags editor */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tags
+              {t("editModal.tagsLabel")}
             </label>
             {errors.tags && (
               <p className="mb-2 text-xs text-red-600" role="alert">
@@ -509,7 +511,7 @@ export function EditModal({
                     type="button"
                     onClick={() => removeTag(index)}
                     className="rounded-full p-0.5 hover:bg-purple-200"
-                    aria-label={`Remove tag "${tag}"`}
+                    aria-label={t("editModal.removeTagAria", { tag })}
                   >
                     <svg
                       className="h-3 w-3"
@@ -534,16 +536,16 @@ export function EditModal({
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 onKeyDown={handleTagKeyDown}
-                placeholder="Add a tag..."
+                placeholder={t("editModal.addTagPlaceholder")}
                 className="flex-1 rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
-                aria-label="New tag"
+                aria-label={t("editModal.newTagAria")}
               />
               <button
                 type="button"
                 onClick={addTag}
                 className="rounded-md bg-gray-100 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-200"
               >
-                Add
+                {t("editModal.addTagButton")}
               </button>
             </div>
           </div>
@@ -557,7 +559,7 @@ export function EditModal({
             disabled={isPending}
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 disabled:opacity-50"
           >
-            Cancel
+            {t("editModal.cancel")}
           </button>
           <button
             type="button"
@@ -565,7 +567,7 @@ export function EditModal({
             disabled={isPending}
             className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isPending ? "Saving..." : "Save Changes"}
+            {isPending ? t("editModal.saving") : t("editModal.saveChanges")}
           </button>
         </div>
       </div>
