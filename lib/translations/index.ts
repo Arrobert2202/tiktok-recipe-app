@@ -8,6 +8,7 @@ import { editModal } from "./editModal";
 import { account } from "./account";
 import { shoppingList } from "./shoppingList";
 import { recipeView } from "./recipeView";
+import { creators } from "./creators";
 
 export const TRANSLATIONS = {
   ...nav,
@@ -20,6 +21,7 @@ export const TRANSLATIONS = {
   ...account,
   ...shoppingList,
   ...recipeView,
+  ...creators,
 };
 
 export type TranslationKey = keyof typeof TRANSLATIONS;

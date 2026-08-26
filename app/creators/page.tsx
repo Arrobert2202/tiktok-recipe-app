@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { submitOptOutRequest, reverseOptOut } from "@/actions/creator";
 import { validateTikTokHandle } from "@/lib/validation";
+import { useLanguage } from "@/lib/use-language";
 
 type FormState =
   | { status: "idle" }
@@ -11,6 +12,7 @@ type FormState =
   | { status: "error"; message: string };
 
 export default function CreatorPortalPage() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<"opt-out" | "reverse">("opt-out");
   const [handle, setHandle] = useState("");
   const [email, setEmail] = useState("");
@@ -23,9 +25,7 @@ export default function CreatorPortalPage() {
       return;
     }
     if (!validateTikTokHandle(value)) {
-      setHandleError(
-        "Handle must be 1-24 characters using only letters, numbers, and underscores."
-      );
+      setHandleError(t("creators.handleValidationError"));
     } else {
       setHandleError("");
     }
@@ -39,9 +39,7 @@ export default function CreatorPortalPage() {
   async function handleOptOut(e: React.FormEvent) {
     e.preventDefault();
     if (!validateTikTokHandle(handle)) {
-      setHandleError(
-        "Handle must be 1-24 characters using only letters, numbers, and underscores."
-      );
+      setHandleError(t("creators.handleValidationError"));
       return;
     }
     setFormState({ status: "submitting" });
@@ -50,22 +48,19 @@ export default function CreatorPortalPage() {
     if (result.success) {
       setFormState({
         status: "success",
-        message:
-          "Check your email for a confirmation link — the request doesn't take effect until you click it. Once you do, it takes effect immediately. The link expires in 7 days.",
+        message: t("creators.optOutSuccessMessage"),
       });
       setHandle("");
       setEmail("");
     } else {
-      setFormState({ status: "error", message: result.error ?? "Something went wrong." });
+      setFormState({ status: "error", message: result.error ?? t("creators.genericError") });
     }
   }
 
   async function handleReverse(e: React.FormEvent) {
     e.preventDefault();
     if (!validateTikTokHandle(handle)) {
-      setHandleError(
-        "Handle must be 1-24 characters using only letters, numbers, and underscores."
-      );
+      setHandleError(t("creators.handleValidationError"));
       return;
     }
     setFormState({ status: "submitting" });
@@ -74,13 +69,12 @@ export default function CreatorPortalPage() {
     if (result.success) {
       setFormState({
         status: "success",
-        message:
-          "If that handle has an active opt-out under this email, we've sent a confirmation link — the reversal doesn't take effect until you click it. The link expires in 7 days.",
+        message: t("creators.reverseSuccessMessage"),
       });
       setHandle("");
       setEmail("");
     } else {
-      setFormState({ status: "error", message: result.error ?? "Something went wrong." });
+      setFormState({ status: "error", message: result.error ?? t("creators.genericError") });
     }
   }
 
@@ -97,13 +91,9 @@ export default function CreatorPortalPage() {
       <section className="py-16">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <h1 className="text-3xl font-bold text-white sm:text-4xl">
-            Creator Content Control
+            {t("creators.hero.heading")}
           </h1>
-          <p className="mt-4 text-lg text-white/60">
-            We respect your content and your choices. If you&apos;re a TikTok
-            creator and would prefer that your videos are not indexed by our
-            recipe extraction service, you can opt out here.
-          </p>
+          <p className="mt-4 text-lg text-white/60">{t("creators.hero.body")}</p>
         </div>
       </section>
 
@@ -111,55 +101,38 @@ export default function CreatorPortalPage() {
       <section className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
           <h2 className="text-xl font-semibold text-white mb-4">
-            What happens when you opt out
+            {t("creators.whatHappens.heading")}
           </h2>
           <ul className="space-y-3 text-white/70">
             <li className="flex items-start gap-3">
               <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-medium text-white">
                 1
               </span>
-              <span>
-                We&apos;ll email you a confirmation link. Nothing changes until
-                you click it — this proves the request actually came from you.
-              </span>
+              <span>{t("creators.whatHappens.step1")}</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-medium text-white">
                 2
               </span>
-              <span>
-                Once confirmed, new recipe extractions from your videos will be
-                blocked. Users will see a notice that you&apos;ve opted out.
-              </span>
+              <span>{t("creators.whatHappens.step2")}</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-medium text-white">
                 3
               </span>
-              <span>
-                Existing recipes from your videos are removed from public
-                share pages immediately, in the same step.
-              </span>
+              <span>{t("creators.whatHappens.step3")}</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-medium text-white">
                 4
               </span>
-              <span>
-                Users who previously saved your recipes will keep them in their
-                private cookbooks, but with a visible notice that you&apos;ve
-                opted out.
-              </span>
+              <span>{t("creators.whatHappens.step4")}</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-medium text-white">
                 5
               </span>
-              <span>
-                You can reverse your decision at any time (same email
-                confirmation step), and public access will be restored within
-                24 hours.
-              </span>
+              <span>{t("creators.whatHappens.step5")}</span>
             </li>
           </ul>
         </div>
@@ -178,7 +151,7 @@ export default function CreatorPortalPage() {
                 : "border-transparent text-white/50 hover:text-white/70 hover:border-white/20"
             }`}
           >
-            Opt Out
+            {t("creators.tab.optOut")}
           </button>
           <button
             type="button"
@@ -192,7 +165,7 @@ export default function CreatorPortalPage() {
                 : "border-transparent text-white/50 hover:text-white/70 hover:border-white/20"
             }`}
           >
-            Reverse Opt-Out
+            {t("creators.tab.reverse")}
           </button>
         </div>
 
@@ -217,7 +190,7 @@ export default function CreatorPortalPage() {
                 </svg>
               </div>
               <p className="text-lg font-medium text-white">
-                Request Submitted
+                {t("creators.requestSubmitted")}
               </p>
               <p className="mt-2 text-white/60">{formState.message}</p>
               <button
@@ -225,20 +198,20 @@ export default function CreatorPortalPage() {
                 onClick={resetForm}
                 className="mt-6 rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white/80 hover:bg-white/15 transition-colors"
               >
-                Submit another request
+                {t("creators.submitAnother")}
               </button>
             </div>
           ) : (
             <>
               <h3 className="text-lg font-medium text-white mb-1">
                 {activeTab === "opt-out"
-                  ? "Request Content Opt-Out"
-                  : "Reverse Your Opt-Out"}
+                  ? t("creators.form.optOutHeading")
+                  : t("creators.form.reverseHeading")}
               </h3>
               <p className="text-sm text-white/50 mb-6">
                 {activeTab === "opt-out"
-                  ? "Enter your TikTok handle and email to opt out of recipe extraction."
-                  : "Enter your TikTok handle and email to restore public access to your recipes."}
+                  ? t("creators.form.optOutSubhead")
+                  : t("creators.form.reverseSubhead")}
               </p>
 
               {formState.status === "error" && (
@@ -256,7 +229,7 @@ export default function CreatorPortalPage() {
                     htmlFor="handle"
                     className="block text-sm font-medium text-white/70"
                   >
-                    TikTok Handle
+                    {t("creators.form.handleLabel")}
                   </label>
                   <div className="mt-1 flex rounded-xl border border-white/10 bg-white/5 focus-within:border-purple-500/50 focus-within:ring-1 focus-within:ring-purple-500/50">
                     <span className="flex items-center pl-3 text-white/40 text-sm">
@@ -269,7 +242,7 @@ export default function CreatorPortalPage() {
                       value={handle}
                       onChange={(e) => handleHandleChange(e.target.value)}
                       className="block w-full rounded-r-xl border-0 bg-transparent px-2 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none"
-                      placeholder="your_handle"
+                      placeholder={t("creators.form.handlePlaceholder")}
                       disabled={formState.status === "submitting"}
                       aria-describedby={handleError ? "handle-error" : undefined}
                       aria-invalid={handleError ? "true" : undefined}
@@ -287,7 +260,7 @@ export default function CreatorPortalPage() {
                     htmlFor="email"
                     className="block text-sm font-medium text-white/70"
                   >
-                    Email Address
+                    {t("creators.form.emailLabel")}
                   </label>
                   <input
                     id="email"
@@ -296,11 +269,11 @@ export default function CreatorPortalPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="mt-1 block w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-purple-500/50 focus:outline-none focus:ring-1 focus:ring-purple-500/50"
-                    placeholder="creator@example.com"
+                    placeholder={t("creators.form.emailPlaceholder")}
                     disabled={formState.status === "submitting"}
                   />
                   <p className="mt-1 text-xs text-white/40">
-                    Used for verification purposes only.
+                    {t("creators.form.emailHint")}
                   </p>
                 </div>
 
@@ -316,10 +289,10 @@ export default function CreatorPortalPage() {
                   }`}
                 >
                   {formState.status === "submitting"
-                    ? "Submitting..."
+                    ? t("creators.form.submitting")
                     : activeTab === "opt-out"
-                      ? "Submit Opt-Out Request"
-                      : "Reverse Opt-Out"}
+                      ? t("creators.form.submitOptOut")
+                      : t("creators.tab.reverse")}
                 </button>
               </form>
             </>
@@ -329,18 +302,17 @@ export default function CreatorPortalPage() {
         {/* Support Section */}
         <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
           <h2 className="text-lg font-semibold text-white mb-2">
-            Questions or concerns?
+            {t("creators.support.heading")}
           </h2>
           <p className="text-sm text-white/60">
-            If you have questions about how your content is used or need
-            assistance with the opt-out process, please reach out to us at{" "}
+            {t("creators.support.body.prefix")}
             <a
               href="mailto:robertaron993@gmail.com"
               className="text-purple-400 hover:text-purple-300 transition-colors"
             >
               robertaron993@gmail.com
             </a>
-            . We typically respond within one business day.
+            {t("creators.support.body.suffix")}
           </p>
         </div>
       </section>
