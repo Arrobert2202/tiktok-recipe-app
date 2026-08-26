@@ -11,6 +11,8 @@ import { recipeView } from "./recipeView";
 import { creators } from "./creators";
 import { settings } from "./settings";
 import { recipeDetail } from "./recipeDetail";
+import { share } from "./share";
+import { install } from "./install";
 
 export const TRANSLATIONS = {
   ...nav,
@@ -26,6 +28,8 @@ export const TRANSLATIONS = {
   ...creators,
   ...settings,
   ...recipeDetail,
+  ...share,
+  ...install,
 };
 
 export type TranslationKey = keyof typeof TRANSLATIONS;

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ChefHat, ArrowRight } from "lucide-react";
 import { extractTikTokUrlFromShare } from "@/lib/share-target";
+import { ShareFallbackContent } from "@/components/share-fallback-content";
 
 export const metadata: Metadata = {
   title: "Shared link",
@@ -58,39 +57,8 @@ export default async function SharePage({
     .find((value) => value);
 
   return (
-    <main className="flex min-h-[calc(100vh-64px)] items-center justify-center px-6 py-16">
-      <div className="w-full max-w-md text-center">
-        <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 shadow-lg shadow-purple-500/25">
-          <ChefHat className="h-7 w-7 text-white" aria-hidden="true" />
-        </div>
-
-        <h1 className="mb-3 text-2xl font-bold text-white sm:text-3xl">
-          That didn&apos;t look like a TikTok link
-        </h1>
-        <p className="mb-8 leading-relaxed text-white/50">
-          We only extract recipes from TikTok videos. Share the video itself
-          from TikTok, or paste the link on the home page.
-        </p>
-
-        {sharedText && (
-          <div className="mb-8 rounded-2xl border border-white/10 bg-white/5 p-5 text-left">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-white/30">
-              What was shared
-            </p>
-            <p className="break-words font-mono text-sm leading-relaxed text-white/40">
-              {truncate(sharedText)}
-            </p>
-          </div>
-        )}
-
-        <Link
-          href="/"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 px-6 py-3.5 font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:from-purple-700 hover:to-pink-600 active:scale-95"
-        >
-          Go to RecipeApp
-          <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </Link>
-      </div>
-    </main>
+    <ShareFallbackContent
+      truncatedSharedText={sharedText ? truncate(sharedText) : undefined}
+    />
   );
 }

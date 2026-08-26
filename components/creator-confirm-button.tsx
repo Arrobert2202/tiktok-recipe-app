@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { confirmCreatorAction } from "@/actions/creator";
+import { useLanguage } from "@/lib/use-language";
 
 interface CreatorConfirmButtonProps {
   token: string;
@@ -17,6 +18,7 @@ interface CreatorConfirmButtonProps {
  * GET itself confirmed anything.
  */
 export function CreatorConfirmButton({ token, handle, action }: CreatorConfirmButtonProps) {
+  const { t } = useLanguage();
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
 
@@ -28,8 +30,8 @@ export function CreatorConfirmButton({ token, handle, action }: CreatorConfirmBu
           success: true,
           message:
             outcome.action === "opt_out"
-              ? `@${outcome.handle}'s videos are now excluded from recipe extraction.`
-              : `@${outcome.handle}'s opt-out has been reversed — public extraction is restored.`,
+              ? t("creators.confirmButton.optOutSuccess", { handle: outcome.handle })
+              : t("creators.confirmButton.reverseSuccess", { handle: outcome.handle }),
         });
       } else {
         setResult({ success: false, message: outcome.error });
@@ -63,10 +65,10 @@ export function CreatorConfirmButton({ token, handle, action }: CreatorConfirmBu
       }`}
     >
       {isPending
-        ? "Confirming..."
+        ? t("creators.confirmButton.confirming")
         : action === "opt_out"
-          ? `Confirm opt-out for @${handle}`
-          : `Confirm reversal for @${handle}`}
+          ? t("creators.confirmButton.confirmOptOutFor", { handle })
+          : t("creators.confirmButton.confirmReversalFor", { handle })}
     </button>
   );
 }
