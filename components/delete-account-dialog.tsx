@@ -6,22 +6,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Trash2, AlertTriangle, Loader2 } from "lucide-react";
 import { deleteAccount } from "@/actions/account";
 import { authClient } from "@/lib/auth-client";
+import { useLanguage } from "@/lib/use-language";
+import type { TranslationKey } from "@/lib/translations";
 
 /** The word the user has to type out before the confirm button unlocks. */
 const CONFIRM_PHRASE = "DELETE";
 
-const REMOVED = [
-  "Your profile: email, name, and avatar",
-  "Your cookbook and every recipe saved in it",
-  "Your tags and cookbook organisation",
-  "Your extraction history and remaining credits",
+const REMOVED_KEYS: TranslationKey[] = [
+  "account.delete.removed.profile",
+  "account.delete.removed.cookbook",
+  "account.delete.removed.tags",
+  "account.delete.removed.history",
 ];
 
-const KEPT = [
-  "Recipes you extracted stay available to other users. They aren't owned by any one account — they're shared, cached content.",
-];
+const KEPT_KEYS: TranslationKey[] = ["account.delete.kept.sharedRecipes"];
 
 export function DeleteAccountDialog() {
+  const { t } = useLanguage();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
@@ -78,9 +79,7 @@ export function DeleteAccountDialog() {
       router.refresh();
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong while deleting your account. Please try again."
+        err instanceof Error ? err.message : t("account.delete.genericError")
       );
       setIsDeleting(false);
     }
@@ -93,7 +92,7 @@ export function DeleteAccountDialog() {
         className="flex items-center gap-2 rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-2.5 text-sm font-semibold text-red-300 hover:bg-red-500/20 hover:text-red-200 hover:border-red-500/50 transition-all active:scale-[0.98]"
       >
         <Trash2 className="w-4 h-4" />
-        Delete my account
+        {t("account.delete.trigger")}
       </button>
 
       <AnimatePresence>
@@ -129,7 +128,7 @@ export function DeleteAccountDialog() {
                 onClick={closeDialog}
                 disabled={isDeleting}
                 className="absolute top-4 right-4 z-10 rounded-full bg-white/5 p-2 text-white/50 hover:bg-white/10 hover:text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                aria-label="Close"
+                aria-label={t("account.delete.close")}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -146,27 +145,26 @@ export function DeleteAccountDialog() {
                   id="delete-account-title"
                   className="text-2xl font-bold text-center text-white mb-2"
                 >
-                  Delete your account?
+                  {t("account.delete.heading")}
                 </h2>
                 <p className="text-center text-white/50 mb-6">
-                  This is permanent. It cannot be undone, and we cannot restore a
-                  deleted account.
+                  {t("account.delete.permanentNotice")}
                 </p>
 
                 {/* What goes */}
                 <div className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5 mb-4">
                   <p className="text-sm font-semibold text-white mb-3">
-                    Deleted for good
+                    {t("account.delete.removedHeading")}
                   </p>
                   <ul className="space-y-2">
-                    {REMOVED.map((item) => (
-                      <li key={item} className="flex items-start gap-2.5">
+                    {REMOVED_KEYS.map((key) => (
+                      <li key={key} className="flex items-start gap-2.5">
                         <span
                           aria-hidden="true"
                           className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400"
                         />
                         <span className="text-sm text-white/70 leading-relaxed">
-                          {item}
+                          {t(key)}
                         </span>
                       </li>
                     ))}
@@ -176,17 +174,17 @@ export function DeleteAccountDialog() {
                 {/* What stays */}
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-5 mb-6">
                   <p className="text-sm font-semibold text-white mb-3">
-                    What stays
+                    {t("account.delete.keptHeading")}
                   </p>
                   <ul className="space-y-2">
-                    {KEPT.map((item) => (
-                      <li key={item} className="flex items-start gap-2.5">
+                    {KEPT_KEYS.map((key) => (
+                      <li key={key} className="flex items-start gap-2.5">
                         <span
                           aria-hidden="true"
                           className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-white/40"
                         />
                         <span className="text-sm text-white/70 leading-relaxed">
-                          {item}
+                          {t(key)}
                         </span>
                       </li>
                     ))}
@@ -198,11 +196,11 @@ export function DeleteAccountDialog() {
                   htmlFor="delete-confirm-input"
                   className="block text-sm text-white/60 mb-2"
                 >
-                  Type{" "}
+                  {t("account.delete.typeToConfirmPrefix")}{" "}
                   <span className="font-mono font-semibold text-white">
                     {CONFIRM_PHRASE}
                   </span>{" "}
-                  to confirm
+                  {t("account.delete.typeToConfirmSuffix")}
                 </label>
                 <input
                   id="delete-confirm-input"
@@ -232,7 +230,7 @@ export function DeleteAccountDialog() {
                     disabled={isDeleting}
                     className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3.5 px-6 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    Keep my account
+                    {t("account.delete.keepAccount")}
                   </button>
                   <button
                     onClick={handleDelete}
@@ -242,12 +240,12 @@ export function DeleteAccountDialog() {
                     {isDeleting ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Deleting...
+                        {t("account.delete.deleting")}
                       </>
                     ) : (
                       <>
                         <Trash2 className="w-4 h-4" />
-                        Delete permanently
+                        {t("account.delete.deletePermanently")}
                       </>
                     )}
                   </button>

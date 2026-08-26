@@ -7,6 +7,7 @@ import { Pencil, Play } from "lucide-react";
 import { CookMode } from "@/components/cook-mode";
 import { EditModal } from "@/components/edit-modal";
 import type { Ingredient } from "@/lib/types";
+import { useLanguage } from "@/lib/use-language";
 
 interface RecipePageClientProps {
   recipe: {
@@ -52,6 +53,7 @@ export function RecipePageClient({
   initialTags,
   children,
 }: RecipePageClientProps) {
+  const { t } = useLanguage();
   const router = useRouter();
   const [cookModeOpen, setCookModeOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -101,7 +103,7 @@ export function RecipePageClient({
             className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold py-4 px-8 rounded-2xl shadow-2xl shadow-purple-500/30 hover:from-purple-700 hover:to-pink-600 hover:shadow-purple-500/50 transition-all active:scale-95"
           >
             <Play className="w-5 h-5" fill="currentColor" />
-            Enter Cook Mode
+            {t("recipeView.enterCookMode")}
           </button>
         </div>
       </motion.div>
@@ -138,6 +140,7 @@ export function RecipePageClient({
  * surrounding RecipePageClient was told the viewer can edit this recipe.
  */
 export function EditRecipeButton() {
+  const { t } = useLanguage();
   const { openEdit } = useContext(RecipeEditContext);
 
   if (!openEdit) return null;
@@ -147,11 +150,11 @@ export function EditRecipeButton() {
       type="button"
       onClick={openEdit}
       whileTap={{ scale: 0.96 }}
-      aria-label="Edit recipe"
+      aria-label={t("recipeView.editRecipeAria")}
       className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-500"
     >
       <Pencil className="w-4 h-4" />
-      Edit
+      {t("recipeView.edit")}
     </motion.button>
   );
 }

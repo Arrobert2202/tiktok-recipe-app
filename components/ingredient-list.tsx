@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import type { Ingredient } from "@/lib/types";
+import { useLanguage } from "@/lib/use-language";
 
 interface IngredientListProps {
   ingredients: Ingredient[];
@@ -11,6 +12,7 @@ interface IngredientListProps {
 }
 
 export function IngredientList({ ingredients, recipeId }: IngredientListProps) {
+  const { t } = useLanguage();
   const storageKey = `recipe-checked-${recipeId}`;
   const [checked, setChecked] = useState<boolean[]>(() =>
     new Array(ingredients.length).fill(false)
@@ -52,7 +54,10 @@ export function IngredientList({ ingredients, recipeId }: IngredientListProps) {
             onClick={() => toggle(index)}
             className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl hover:bg-white/5 transition-all text-left group"
             aria-pressed={checked[index]}
-            aria-label={`${checked[index] ? "Uncheck" : "Check"} ${formatIngredient(ingredient)}`}
+            aria-label={t(
+              checked[index] ? "recipeView.ingredient.uncheckAria" : "recipeView.ingredient.checkAria",
+              { name: formatIngredient(ingredient) }
+            )}
           >
             {/* Custom animated checkbox */}
             <motion.div

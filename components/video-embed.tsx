@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLanguage } from "@/lib/use-language";
 
 interface VideoEmbedProps {
   sourceUrl: string;
 }
 
 export function VideoEmbed({ sourceUrl }: VideoEmbedProps) {
+  const { t } = useLanguage();
   const [showFallback, setShowFallback] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -58,16 +60,14 @@ export function VideoEmbed({ sourceUrl }: VideoEmbedProps) {
   if (showFallback) {
     return (
       <div className="w-full rounded-lg bg-gray-100 p-6 text-center">
-        <p className="text-gray-600 mb-3">
-          The TikTok embed could not be loaded.
-        </p>
+        <p className="text-gray-600 mb-3">{t("recipeView.videoEmbed.loadFailed")}</p>
         <a
           href={sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block rounded-md bg-black px-4 py-2 text-white font-medium hover:bg-gray-800 transition-colors"
         >
-          Watch on TikTok
+          {t("recipeView.videoEmbed.watchOnTiktok")}
         </a>
       </div>
     );
@@ -83,7 +83,7 @@ export function VideoEmbed({ sourceUrl }: VideoEmbedProps) {
       >
         <section>
           <a href={sourceUrl} target="_blank" rel="noopener noreferrer">
-            Watch on TikTok
+            {t("recipeView.videoEmbed.watchOnTiktok")}
           </a>
         </section>
       </blockquote>

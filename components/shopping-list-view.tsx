@@ -8,14 +8,28 @@ import {
   groupByCategory,
   CATEGORY_LABELS,
   CATEGORY_ORDER,
+  type ShoppingCategory,
   type ShoppingListItem,
 } from "@/lib/shopping-list";
+import { useLanguage } from "@/lib/use-language";
+import type { TranslationKey } from "@/lib/translations";
 
 interface ShoppingListViewProps {
   items: ShoppingListItem[];
   recipeIds: string[];
   recipeCount: number;
 }
+
+const CATEGORY_LABEL_KEYS: Record<ShoppingCategory, TranslationKey> = {
+  produce: "shoppingList.category.produce",
+  meat_seafood: "shoppingList.category.meatSeafood",
+  dairy_eggs: "shoppingList.category.dairyEggs",
+  bakery: "shoppingList.category.bakery",
+  pantry: "shoppingList.category.pantry",
+  spices: "shoppingList.category.spices",
+  frozen: "shoppingList.category.frozen",
+  other: "shoppingList.category.other",
+};
 
 /** Stable per-item identity so checked state survives a reload. */
 function itemKey(item: ShoppingListItem): string {
@@ -27,6 +41,7 @@ export function ShoppingListView({
   recipeIds,
   recipeCount,
 }: ShoppingListViewProps) {
+  const { t, tCount } = useLanguage();
   const storageKey = useMemo(
     () => `shopping-list-checked-${[...recipeIds].sort().join(",")}`,
     [recipeIds]
@@ -81,7 +96,7 @@ export function ShoppingListView({
   ).length;
 
   async function copyAsText() {
-    const text = buildPlainText(grouped, checkedKeys);
+    const text = buildPlainText(grouped, checkedKeys, t);
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -105,15 +120,15 @@ export function ShoppingListView({
             className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Back to Cookbook
+            {t("shoppingList.backToCookbook")}
           </Link>
 
           <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-white">Shopping List</h1>
+              <h1 className="text-2xl font-bold text-white">{t("shoppingList.heading")}</h1>
               <p className="mt-1 text-sm text-white/50">
-                {items.length} {items.length === 1 ? "item" : "items"} ·{" "}
-                {recipeCount} {recipeCount === 1 ? "recipe" : "recipes"}
+                {tCount("shoppingList.itemCount", items.length)} ·{" "}
+                {tCount("shoppingList.recipeCountPlain", recipeCount)}
               </p>
             </div>
 
@@ -122,7 +137,7 @@ export function ShoppingListView({
                 className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/70"
                 aria-live="polite"
               >
-                {checkedCount} / {items.length} checked
+                {t("shoppingList.checkedProgress", { checked: checkedCount, total: items.length })}
               </span>
 
               <button
@@ -130,7 +145,7 @@ export function ShoppingListView({
                 className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white"
               >
                 <ClipboardCopy className="h-3.5 w-3.5" />
-                {copied ? "Copied!" : "Copy as text"}
+                {copied ? t("shoppingList.copied") : t("shoppingList.copyAsText")}
               </button>
 
               <button
@@ -139,7 +154,7 @@ export function ShoppingListView({
                 className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
-                Clear checked
+                {t("shoppingList.clearChecked")}
               </button>
             </div>
           </div>
@@ -163,7 +178,8 @@ export function ShoppingListView({
         <div className="space-y-4">
           {visibleCategories.map((category) => {
             const categoryItems = grouped[category];
-            const { label, emoji } = CATEGORY_LABELS[category];
+            const { emoji } = CATEGORY_LABELS[category];
+            const label = t(CATEGORY_LABEL_KEYS[category]);
 
             return (
               <section
@@ -190,7 +206,10 @@ export function ShoppingListView({
                         <button
                           onClick={() => toggle(item)}
                           aria-pressed={isChecked}
-                          aria-label={`${isChecked ? "Uncheck" : "Check"} ${item.name}`}
+                          aria-label={t(
+                            isChecked ? "shoppingList.uncheckItemAria" : "shoppingList.checkItemAria",
+                            { name: item.name }
+                          )}
                           className="group flex w-full items-center gap-4 rounded-xl px-3 py-3.5 text-left transition-all hover:bg-white/5"
                         >
                           {/* Animated checkbox */}
@@ -274,15 +293,17 @@ export function ShoppingListView({
 
 function buildPlainText(
   grouped: Record<string, ShoppingListItem[]>,
-  checkedKeys: Set<string>
+  checkedKeys: Set<string>,
+  t: (key: TranslationKey) => string
 ): string {
-  const lines: string[] = ["Shopping List", ""];
+  const lines: string[] = [t("shoppingList.heading"), ""];
 
   for (const category of CATEGORY_ORDER) {
     const categoryItems = grouped[category];
     if (!categoryItems || categoryItems.length === 0) continue;
 
-    const { label, emoji } = CATEGORY_LABELS[category];
+    const { emoji } = CATEGORY_LABELS[category];
+    const label = t(CATEGORY_LABEL_KEYS[category]);
     lines.push(`${emoji} ${label}`);
 
     for (const item of categoryItems) {

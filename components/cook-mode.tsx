@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
+import { useLanguage } from "@/lib/use-language";
 
 interface Ingredient {
   name: string;
@@ -18,6 +19,7 @@ interface CookModeProps {
 }
 
 export function CookMode({ steps, ingredients, title, onClose }: CookModeProps) {
+  const { t } = useLanguage();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [wakeLockSupported, setWakeLockSupported] = useState(true);
   const [dragX, setDragX] = useState(0);
@@ -98,17 +100,17 @@ export function CookMode({ steps, ingredients, title, onClose }: CookModeProps) 
         <button
           onClick={onClose}
           className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all text-sm font-medium"
-          aria-label="Exit Cook Mode"
+          aria-label={t("recipeView.cookMode.exitAria")}
         >
           <X className="w-4 h-4" />
-          Exit
+          {t("recipeView.cookMode.exit")}
         </button>
       </div>
 
       {/* Wake-lock unsupported notice */}
       {!wakeLockSupported && (
         <div className="absolute top-6 left-6 px-4 py-2 rounded-full bg-yellow-500/20 border border-yellow-500/30 text-yellow-200 text-xs">
-          Screen sleep prevention unavailable
+          {t("recipeView.cookMode.wakeLockUnavailable")}
         </div>
       )}
 
@@ -118,12 +120,12 @@ export function CookMode({ steps, ingredients, title, onClose }: CookModeProps) 
         <div
           className="absolute inset-y-0 left-0 w-[40%] z-10 cursor-pointer"
           onClick={goToPreviousStep}
-          aria-label="Previous step"
+          aria-label={t("recipeView.cookMode.previousStepAria")}
         />
         <div
           className="absolute inset-y-0 right-0 w-[40%] z-10 cursor-pointer"
           onClick={goToNextStep}
-          aria-label="Next step"
+          aria-label={t("recipeView.cookMode.nextStepAria")}
         />
 
         {/* Step counter - glowing */}
@@ -183,7 +185,7 @@ export function CookMode({ steps, ingredients, title, onClose }: CookModeProps) 
 
       {/* Bottom hint */}
       <div className="text-center pb-6 text-sm text-white/30">
-        Tap sides or swipe to navigate
+        {t("recipeView.cookMode.swipeHint")}
       </div>
     </motion.div>
   );

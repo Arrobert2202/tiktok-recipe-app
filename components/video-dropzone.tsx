@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import { Upload, Film, Check, Loader2 } from "lucide-react";
+import { useLanguage } from "@/lib/use-language";
 
 interface VideoDropzoneProps {
   onTranscriptReady: (transcript: string) => void;
@@ -10,6 +11,7 @@ interface VideoDropzoneProps {
 }
 
 export function VideoDropzone({ onTranscriptReady, disabled }: VideoDropzoneProps) {
+  const { t } = useLanguage();
   const [isDragOver, setIsDragOver] = useState(false);
   const [status, setStatus] = useState<"idle" | "uploading" | "transcribing" | "done" | "error">("idle");
   const [fileName, setFileName] = useState<string | null>(null);
@@ -20,7 +22,7 @@ export function VideoDropzone({ onTranscriptReady, disabled }: VideoDropzoneProp
     // route handler request bodies at ~4.5MB, well under the 25MB Whisper
     // itself accepts.
     if (file.size > 4 * 1024 * 1024) {
-      setError("File too large. Max 4MB.");
+      setError(t("recipeView.dropzone.tooLarge"));
       setStatus("error");
       return;
     }
@@ -40,7 +42,7 @@ export function VideoDropzone({ onTranscriptReady, disabled }: VideoDropzoneProp
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Transcription failed");
+        throw new Error(data.error || t("recipeView.dropzone.transcriptionFailed"));
       }
 
       const { transcript } = await res.json();
@@ -48,9 +50,9 @@ export function VideoDropzone({ onTranscriptReady, disabled }: VideoDropzoneProp
       onTranscriptReady(transcript);
     } catch (err) {
       setStatus("error");
-      setError(err instanceof Error ? err.message : "Upload failed");
+      setError(err instanceof Error ? err.message : t("recipeView.dropzone.uploadFailed"));
     }
-  }, [onTranscriptReady]);
+  }, [onTranscriptReady, t]);
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
@@ -91,27 +93,26 @@ export function VideoDropzone({ onTranscriptReady, disabled }: VideoDropzoneProp
           onChange={handleFileInput}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           disabled={disabled || status === "transcribing"}
-          aria-label="Upload video file for transcription"
+          aria-label={t("recipeView.dropzone.uploadAria")}
         />
 
         {status === "idle" && (
           <div className="flex flex-col items-center gap-2">
             <Upload className="w-8 h-8 text-white/30" />
             <p className="text-sm text-white/50">
-              <span className="text-purple-400 font-medium">Upload video</span> for better accuracy
+              <span className="text-purple-400 font-medium">
+                {t("recipeView.dropzone.uploadVideo")}
+              </span>{" "}
+              {t("recipeView.dropzone.forBetterAccuracy")}
             </p>
-            <p className="text-xs text-white/30">
-              Optional &middot; Drag &amp; drop or click &middot; MP4, WebM (max 4MB)
-            </p>
+            <p className="text-xs text-white/30">{t("recipeView.dropzone.hint")}</p>
           </div>
         )}
 
         {status === "transcribing" && (
           <div className="flex items-center justify-center gap-3">
             <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
-            <p className="text-sm text-white/70">
-              Transcribing audio with AI...
-            </p>
+            <p className="text-sm text-white/70">{t("recipeView.dropzone.transcribing")}</p>
           </div>
         )}
 
@@ -119,7 +120,7 @@ export function VideoDropzone({ onTranscriptReady, disabled }: VideoDropzoneProp
           <div className="flex items-center justify-center gap-3">
             <Check className="w-5 h-5 text-green-400" />
             <p className="text-sm text-green-400 font-medium">
-              Audio transcribed &mdash; {fileName}
+              {t("recipeView.dropzone.transcribedWithFile", { fileName: fileName ?? "" })}
             </p>
           </div>
         )}
@@ -128,7 +129,7 @@ export function VideoDropzone({ onTranscriptReady, disabled }: VideoDropzoneProp
           <div className="flex flex-col items-center gap-2">
             <Film className="w-6 h-6 text-red-400" />
             <p className="text-sm text-red-400">{error}</p>
-            <p className="text-xs text-white/30">Try again or continue without video</p>
+            <p className="text-xs text-white/30">{t("recipeView.dropzone.tryAgainHint")}</p>
           </div>
         )}
       </div>

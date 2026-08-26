@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Share2, Check } from "lucide-react";
+import { useLanguage } from "@/lib/use-language";
 
 interface ShareButtonProps {
   slug: string;
@@ -28,6 +29,7 @@ const VARIANT_CLASSES: Record<"solid" | "ghost", string> = {
  * hand.
  */
 export function ShareButton({ slug, title, variant = "ghost" }: ShareButtonProps) {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [manualUrl, setManualUrl] = useState<string | null>(null);
   const copiedTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -50,7 +52,11 @@ export function ShareButton({ slug, title, variant = "ghost" }: ShareButtonProps
 
     if (typeof navigator.share === "function") {
       try {
-        await navigator.share({ title, text: `Recipe: ${title}`, url });
+        await navigator.share({
+          title,
+          text: t("recipeView.share.nativeShareText", { title }),
+          url,
+        });
         return;
       } catch (error) {
         // Dismissing the share sheet is a normal outcome, not a failure.
@@ -81,7 +87,11 @@ export function ShareButton({ slug, title, variant = "ghost" }: ShareButtonProps
         type="button"
         onClick={handleShare}
         whileTap={{ scale: 0.96 }}
-        aria-label={copied ? "Link copied" : `Share ${title}`}
+        aria-label={
+          copied
+            ? t("recipeView.share.linkCopiedAria")
+            : t("recipeView.share.shareAria", { title })
+        }
         className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-500 ${VARIANT_CLASSES[variant]}`}
       >
         {copied ? (
@@ -89,11 +99,11 @@ export function ShareButton({ slug, title, variant = "ghost" }: ShareButtonProps
         ) : (
           <Share2 className="w-4 h-4" />
         )}
-        {copied ? "Link copied!" : "Share"}
+        {copied ? t("recipeView.share.linkCopiedButton") : t("recipeView.share.shareButton")}
       </motion.button>
 
       <span aria-live="polite" className="sr-only">
-        {copied ? "Share link copied to clipboard" : ""}
+        {copied ? t("recipeView.share.copiedLiveRegion") : ""}
       </span>
 
       {manualUrl && (
@@ -101,7 +111,7 @@ export function ShareButton({ slug, title, variant = "ghost" }: ShareButtonProps
           readOnly
           value={manualUrl}
           onFocus={(event) => event.currentTarget.select()}
-          aria-label="Recipe share link — copy manually"
+          aria-label={t("recipeView.share.manualCopyAria")}
           className="mt-2 w-full min-w-[240px] rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs text-white/70 focus:outline-none focus:border-purple-500/50"
         />
       )}
