@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     "What we collect, what we never collect, who processes your data, and how to access, export, or delete it.",
 };
 
-const LAST_UPDATED = "July 30, 2026";
+const LAST_UPDATED = "August 27, 2026";
 
 const PROCESSORS: { name: string; receives: string; why: string }[] = [
   {
@@ -280,25 +280,36 @@ export default function PrivacyPage() {
         <ul className="list-disc list-inside space-y-2 text-white/70">
           <li>
             <strong className="font-semibold text-white">
-              One session cookie
+              A session cookie
             </strong>{" "}
             to keep you signed in. It is strictly necessary for the service to
             work; without it you would be logged out on every page load.
           </li>
           <li>
+            <strong className="font-semibold text-white">
+              A language-preference cookie.
+            </strong>{" "}
+            Remembers which of our 15 interface languages you&apos;ve chosen, so
+            a page can render already-translated on arrival instead of
+            defaulting to English and switching after the page loads. It holds
+            only a language code, nothing that identifies you beyond your
+            existing session.
+          </li>
+          <li>
             <strong className="font-semibold text-white">localStorage</strong>{" "}
-            in your own browser for interface preferences: your chosen recipe
-            language, which ingredients you&apos;ve ticked off, and your shopping
-            list state. This data stays on your device and is not sent to us.
+            in your own browser for other interface state: which ingredients
+            you&apos;ve ticked off, and your shopping list state. This data
+            stays on your device and is not sent to us.
           </li>
           <li>
             <strong className="font-semibold text-white">
               No advertising cookies, no analytics fingerprinting, and no
               cross-site tracking.
             </strong>{" "}
-            We don&apos;t embed third-party ad or tracking pixels. TikTok video
-            embeds are served by TikTok and may set their own cookies when a
-            video loads.
+            Neither cookie above is used for advertising or cross-site
+            tracking. We don&apos;t embed third-party ad or tracking pixels.
+            TikTok video embeds are served by TikTok and may set their own
+            cookies when a video loads.
           </li>
         </ul>
       </div>

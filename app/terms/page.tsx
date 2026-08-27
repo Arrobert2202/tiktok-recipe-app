@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     "The terms that govern your use of our TikTok recipe extraction service, including credits, subscriptions, creator rights, and AI accuracy limits.",
 };
 
-const LAST_UPDATED = "July 30, 2026";
+const LAST_UPDATED = "August 27, 2026";
 
 export default function TermsPage() {
   return (
@@ -241,7 +241,23 @@ export default function TermsPage() {
       </p>
 
       <h2 className="text-xl font-semibold text-white mt-10 mb-3">
-        8. Acceptable use
+        8. Copyright and content removal requests
+      </h2>
+      <p className="text-white/70 leading-relaxed">
+        If you believe a specific recipe page infringes a copyright — yours or
+        someone else&apos;s — email us at the address in Section 15 with the
+        page&apos;s URL and a description of the issue. We&apos;ll look into it
+        and remove or correct it if the request is warranted.
+      </p>
+      <p className="mt-3 text-white/70 leading-relaxed">
+        If you&apos;re the creator and would rather stop future extraction of
+        your content entirely instead of handling it recipe by recipe, use the
+        opt-out process in Section 7 — it&apos;s faster and covers everything
+        going forward, not just one page.
+      </p>
+
+      <h2 className="text-xl font-semibold text-white mt-10 mb-3">
+        9. Acceptable use
       </h2>
       <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
         <p className="text-white/70 leading-relaxed">
@@ -280,7 +296,7 @@ export default function TermsPage() {
       </div>
 
       <h2 className="text-xl font-semibold text-white mt-10 mb-3">
-        9. Third-party services
+        10. Third-party services
       </h2>
       <p className="text-white/70 leading-relaxed">
         The service depends on independent companies that we don&apos;t control:
@@ -294,7 +310,7 @@ export default function TermsPage() {
       </p>
 
       <h2 className="text-xl font-semibold text-white mt-10 mb-3">
-        10. Termination
+        11. Termination
       </h2>
       <p className="text-white/70 leading-relaxed">
         You can stop using the service and delete your account whenever you
@@ -311,7 +327,7 @@ export default function TermsPage() {
       </p>
 
       <h2 className="text-xl font-semibold text-white mt-10 mb-3">
-        11. Disclaimers and limitation of liability
+        12. Disclaimers and limitation of liability
       </h2>
       <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
         <p className="text-white/70 leading-relaxed">
@@ -338,7 +354,33 @@ export default function TermsPage() {
       </div>
 
       <h2 className="text-xl font-semibold text-white mt-10 mb-3">
-        12. Changes to these terms
+        13. Governing law and disputes
+      </h2>
+      <p className="text-white/70 leading-relaxed">
+        These terms are governed by the laws of Romania, without regard to its
+        conflict-of-law rules. If a disagreement comes up, email us first and
+        give us a chance to sort it out informally — most things are fixable
+        without escalating. If it genuinely can&apos;t be resolved that way,
+        the courts of Romania have jurisdiction, except where mandatory
+        consumer-protection law in your own country of residence gives you the
+        right to bring a claim there instead; nothing here overrides a
+        protection you can&apos;t contractually give up.
+      </p>
+      <p className="mt-3 text-white/70 leading-relaxed">
+        If any part of these terms turns out to be unenforceable, the rest
+        stays in effect. These terms and our{" "}
+        <Link
+          href="/privacy"
+          className="text-purple-400 hover:text-purple-300 transition-colors"
+        >
+          Privacy Policy
+        </Link>{" "}
+        are the entire agreement between you and us about the service, and
+        replace any earlier agreement on the same subject.
+      </p>
+
+      <h2 className="text-xl font-semibold text-white mt-10 mb-3">
+        14. Changes to these terms
       </h2>
       <p className="text-white/70 leading-relaxed">
         We may update these terms as the service evolves. The current version is
@@ -349,7 +391,7 @@ export default function TermsPage() {
       </p>
 
       <h2 className="text-xl font-semibold text-white mt-10 mb-3">
-        13. Contact
+        15. Contact
       </h2>
       <p className="text-white/70 leading-relaxed">
         Questions about these terms? Email{" "}
