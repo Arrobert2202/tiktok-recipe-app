@@ -95,7 +95,7 @@ import { canonicalizeTikTokUrl } from "@/lib/url";
 import { tasks } from "@trigger.dev/sdk/v3";
 import { tryConsumeUserAction } from "@/lib/user-limit";
 import { parseRecipeFromText } from "@/lib/recipe-parser";
-import { TextTooLongError } from "@/lib/errors";
+import { TextTooLongError, VideoUnavailableError } from "@/lib/errors";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -631,6 +631,39 @@ describe("submitAnonymousUrl - oversized caption handling", () => {
     const { error } = result as { error: { code: string; message: string } };
     expect(error.code).toBe("TEXT_TOO_LONG");
     expect(error.message).toMatch(/too long/i);
+  });
+
+  it("returns a specific VIDEO_UNAVAILABLE error instead of the generic 'no description' message", async () => {
+    // This is the anonymous path's only fetch attempt — no async job behind
+    // it to retry from — so a private/deleted/rate-limited video needs its
+    // own message here rather than being misread as "this video just has no
+    // caption text".
+    const { submitAnonymousUrl } = await import("@/actions/extraction");
+
+    vi.mocked(auth.api.getSession).mockResolvedValue(null);
+
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          orderBy: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      }),
+    } as never);
+
+    vi.mocked(fetchOembedMetadata).mockRejectedValue(
+      new VideoUnavailableError("private_or_deleted", "oEmbed returned 404")
+    );
+
+    const result = await submitAnonymousUrl(VALID_URL);
+
+    expect(result).toHaveProperty("error");
+    const { error } = result as { error: { code: string; message: string } };
+    expect(error.code).toBe("VIDEO_UNAVAILABLE");
+    expect(error.message).toBe(
+      "This video is private, deleted, or no longer available. Double-check the link, or try a different video."
+    );
   });
 });
 

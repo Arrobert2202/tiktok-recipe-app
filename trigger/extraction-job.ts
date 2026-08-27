@@ -8,7 +8,13 @@ import { generateSlug } from "@/lib/slug";
 import { refundCredit } from "@/lib/credits";
 import { getQualityTierForStrategy } from "@/lib/quality-tier";
 import { normalizeLanguageCode } from "@/lib/languages";
-import { TextTooLongError, RecipeParseError } from "@/lib/errors";
+import {
+  TextTooLongError,
+  RecipeParseError,
+  VideoUnavailableError,
+  videoUnavailableMessage,
+  type VideoUnavailableReason,
+} from "@/lib/errors";
 import { estimateCostMicros } from "@/lib/openai-pricing";
 import type { StrategyAttempt } from "@/lib/types";
 
@@ -84,6 +90,12 @@ export const extractionJob = task({
     const { jobId, canonicalUrl } = payload;
     const attempts: StrategyAttempt[] = [];
     const isClientTranscript = !!payload.clientTranscript;
+    // Set when either oEmbed or yt-dlp gives a specific reason the video
+    // itself is the problem (private/deleted/rate-limited) rather than a
+    // generic fault. Read only if both fetches end up empty-handed, so it
+    // can turn today's raw "no text available" debug string into an actual
+    // user-facing explanation.
+    let unavailableReason: VideoUnavailableReason | null = null;
 
     try {
       // Step 1: Fetch oEmbed caption
@@ -100,6 +112,9 @@ export const extractionJob = task({
           durationMs: Date.now() - oembedStart,
         });
       } catch (err) {
+        if (err instanceof VideoUnavailableError) {
+          unavailableReason = err.reason;
+        }
         attempts.push({
           strategy: "oembed_caption",
           success: false,
@@ -140,7 +155,12 @@ export const extractionJob = task({
             durationMs: Date.now() - asrStart,
           });
         } catch (err) {
-          // ASR is optional — continue with caption only if it fails
+          // ASR is optional — continue with caption only if it fails.
+          // oEmbed's reason wins if both fetches happen to disagree — it's
+          // the faster, cheaper signal and runs first.
+          if (err instanceof VideoUnavailableError && !unavailableReason) {
+            unavailableReason = err.reason;
+          }
           attempts.push({
             strategy: "asr",
             success: false,
@@ -156,7 +176,10 @@ export const extractionJob = task({
 
       // Ensure we have at least SOMETHING to parse
       if (!captionText && !transcriptText) {
-        throw new Error("No text available: both caption and audio transcription failed");
+        throw new VideoUnavailableError(
+          unavailableReason ?? "unknown",
+          "both caption and audio transcription failed"
+        );
       }
 
       // Step 3: Parse with Data Fusion LLM
@@ -244,11 +267,13 @@ export const extractionJob = task({
 
       return { recipeId: recipe.id, slug };
     } catch (error) {
-      // Distinguishes the two typed failures parseRecipeFromText can throw
-      // from a generic fault (network, DB, yt-dlp, etc.) — without this,
-      // every failure surfaced as the same blanket "EXTRACTION_FAILED"
-      // regardless of cause. home-page.tsx renders `error.message` verbatim
-      // on a failed job, so this is where that copy actually comes from now.
+      // Distinguishes the typed failures (parseRecipeFromText's two, plus
+      // VideoUnavailableError from the oEmbed/yt-dlp fetches) from a generic
+      // fault — without this, every failure surfaced as the same blanket
+      // "EXTRACTION_FAILED" regardless of cause, including a raw internal
+      // string for a private/deleted/rate-limited video. home-page.tsx
+      // renders `error.message` verbatim on a failed job, so this is where
+      // that copy actually comes from now.
       let code = "EXTRACTION_FAILED";
       let message = error instanceof Error ? error.message : "Unknown error";
 
@@ -257,6 +282,9 @@ export const extractionJob = task({
         message = "This video is too long to process. Try a shorter video.";
       } else if (error instanceof RecipeParseError) {
         message = "We couldn't find a recognisable recipe in this video. Try a different one.";
+      } else if (error instanceof VideoUnavailableError) {
+        code = error.code;
+        message = videoUnavailableMessage(error.reason);
       }
 
       await db

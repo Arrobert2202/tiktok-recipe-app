@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { RecipeParseError, TextTooLongError } from "@/lib/errors";
+import { RecipeParseError, TextTooLongError, VideoUnavailableError } from "@/lib/errors";
 
 vi.mock("@/db", () => ({
   db: {
@@ -274,6 +274,74 @@ describe("extractionJob - failure error codes", () => {
     expect(failureUpdate?.error).toMatchObject({
       code: "EXTRACTION_FAILED",
       message: "openai connection reset",
+    });
+  });
+});
+
+describe("extractionJob - video unavailable", () => {
+  function mockUpdateCapture() {
+    const jobUpdates: Array<Record<string, unknown>> = [];
+    vi.mocked(db.update).mockImplementation(((table: unknown) => ({
+      set: vi.fn().mockImplementation((payload: Record<string, unknown>) => {
+        if (table === extractionJobs) jobUpdates.push(payload);
+        return { where: vi.fn().mockResolvedValue(undefined) };
+      }),
+    })) as never);
+    return jobUpdates;
+  }
+
+  // Neither fetch succeeding is the only way to reach this branch — a real
+  // caption or transcript, however thin, always gets handed to the parser
+  // instead (which is where RecipeParseError's "no recipe found" belongs).
+
+  it("surfaces oEmbed's reason when both fetches fail and oEmbed knew why", async () => {
+    vi.mocked(fetchOembedMetadata).mockRejectedValue(
+      new VideoUnavailableError("private_or_deleted", "oEmbed returned 404")
+    );
+    vi.mocked(extractAudioFromUrl).mockRejectedValue(new Error("yt-dlp: generic failure"));
+    const jobUpdates = mockUpdateCapture();
+
+    await expect(run(BASE_PAYLOAD)).rejects.toThrow(VideoUnavailableError);
+
+    const failureUpdate = jobUpdates.find((u) => u.status === "failed");
+    expect(failureUpdate?.error).toMatchObject({
+      code: "VIDEO_UNAVAILABLE",
+      message:
+        "This video is private, deleted, or no longer available. Double-check the link, or try a different video.",
+    });
+  });
+
+  it("falls back to yt-dlp's reason when oEmbed fails generically but yt-dlp knew why", async () => {
+    vi.mocked(fetchOembedMetadata).mockRejectedValue(new Error("oEmbed timed out"));
+    vi.mocked(extractAudioFromUrl).mockRejectedValue(
+      new VideoUnavailableError("rate_limited", "yt-dlp: HTTP Error 429")
+    );
+    const jobUpdates = mockUpdateCapture();
+
+    await expect(run(BASE_PAYLOAD)).rejects.toThrow(VideoUnavailableError);
+
+    const failureUpdate = jobUpdates.find((u) => u.status === "failed");
+    expect(failureUpdate?.error).toMatchObject({
+      code: "VIDEO_UNAVAILABLE",
+      message: "TikTok is temporarily limiting requests. Please try again in a few minutes.",
+    });
+  });
+
+  it("gives a real user message instead of the old raw debug string when neither side knows why", async () => {
+    vi.mocked(fetchOembedMetadata).mockRejectedValue(new Error("network blip"));
+    vi.mocked(extractAudioFromUrl).mockRejectedValue(new Error("network blip"));
+    const jobUpdates = mockUpdateCapture();
+
+    await expect(run(BASE_PAYLOAD)).rejects.toThrow(VideoUnavailableError);
+
+    const failureUpdate = jobUpdates.find((u) => u.status === "failed");
+    expect(failureUpdate?.error).toMatchObject({
+      code: "VIDEO_UNAVAILABLE",
+      message: "We couldn't reach this video right now. Double-check the link, or try again in a few minutes.",
+    });
+    // The old bug: this internal string leaking straight to the user.
+    expect(failureUpdate?.error).not.toMatchObject({
+      message: expect.stringContaining("No text available"),
     });
   });
 });

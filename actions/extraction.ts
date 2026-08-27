@@ -10,7 +10,13 @@ import { validateTikTokUrl, canonicalizeTikTokUrl, extractCreatorHandle } from "
 import { isCreatorOptedOut } from "@/lib/opt-out-cache";
 import { fetchOembedMetadata } from "@/trigger/strategies/oembed";
 import { generateSlug } from "@/lib/slug";
-import { createError, RecipeParseError, TextTooLongError } from "@/lib/errors";
+import {
+  createError,
+  RecipeParseError,
+  TextTooLongError,
+  VideoUnavailableError,
+  videoUnavailableMessage,
+} from "@/lib/errors";
 import { normalizeLanguageCode } from "@/lib/languages";
 import { getQualityTierForStrategy, QUALITY_TIER_CAPTION, QUALITY_TIER_FULL } from "@/lib/quality-tier";
 import type { AppError } from "@/lib/errors";
@@ -222,8 +228,11 @@ export async function submitTikTokUrl(
     };
   }
 
-  // 11. Fetch oEmbed metadata for creator info
-  const oembedMeta = await fetchOembedMetadata(canonicalUrl);
+  // 11. Fetch oEmbed metadata for creator info. Best-effort only — if this
+  // fails, the job re-fetches oEmbed itself and produces the real,
+  // reason-specific failure from there; this call just seeds creator
+  // display info a little earlier when it's available.
+  const oembedMeta = await fetchOembedMetadata(canonicalUrl).catch(() => null);
 
   // 12. Create new extraction job record in DB
   const [newJob] = await db
@@ -386,8 +395,19 @@ export async function submitAnonymousUrl(
     };
   }
 
-  // 9. Fetch oEmbed metadata (official API, no scraping, no audio)
-  const oembedMeta = await fetchOembedMetadata(canonicalUrl);
+  // 9. Fetch oEmbed metadata (official API, no scraping, no audio). This is
+  // the anonymous path's only fetch attempt — no async job to retry from —
+  // so unlike the signed-in path's prefetch, a VideoUnavailableError here
+  // has to become the actual response rather than being swallowed.
+  let oembedMeta;
+  try {
+    oembedMeta = await fetchOembedMetadata(canonicalUrl);
+  } catch (err) {
+    if (err instanceof VideoUnavailableError) {
+      return { error: createError(err.code, videoUnavailableMessage(err.reason)) };
+    }
+    oembedMeta = null;
+  }
   const captionText = oembedMeta?.title?.trim();
 
   if (!captionText) {

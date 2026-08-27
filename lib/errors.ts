@@ -34,6 +34,41 @@ export class RecipeParseError extends Error {
   }
 }
 
+export type VideoUnavailableReason = "private_or_deleted" | "rate_limited" | "unknown";
+
+/**
+ * Thrown when a video can't be reached at all — as opposed to RecipeParseError,
+ * where we reached it fine and just didn't find a recipe in it. `reason` is
+ * best-effort: derived from oEmbed's HTTP status or known yt-dlp stderr
+ * patterns, "unknown" when neither gives us anything to go on.
+ */
+export class VideoUnavailableError extends Error {
+  public readonly code = "VIDEO_UNAVAILABLE";
+  public readonly reason: VideoUnavailableReason;
+
+  constructor(reason: VideoUnavailableReason, detail: string) {
+    super(`Video unavailable (${reason}): ${detail}`);
+    this.name = "VideoUnavailableError";
+    this.reason = reason;
+  }
+}
+
+/**
+ * User-facing copy for each VideoUnavailableReason — shared by the anonymous,
+ * signed-in, and async job failure paths so the wording is consistent no
+ * matter which one hits it.
+ */
+export function videoUnavailableMessage(reason: VideoUnavailableReason): string {
+  switch (reason) {
+    case "private_or_deleted":
+      return "This video is private, deleted, or no longer available. Double-check the link, or try a different video.";
+    case "rate_limited":
+      return "TikTok is temporarily limiting requests. Please try again in a few minutes.";
+    default:
+      return "We couldn't reach this video right now. Double-check the link, or try again in a few minutes.";
+  }
+}
+
 export class ExtractionFailedError extends Error {
   public readonly code = "EXTRACTION_FAILED";
   public readonly strategiesAttempted: Array<{
